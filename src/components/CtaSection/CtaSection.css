@@ -1,0 +1,74 @@
+.cta-section {
+  padding: 40px 0 80px;
+  background-color: var(--bg-light);
+}
+
+.cta-card {
+  background: linear-gradient(135deg, #0e85a6 0%, #154c73 100%);
+  border-radius: 24px;
+  padding: 48px 40px;
+  box-shadow: 0 20px 45px rgba(14, 133, 166, 0.3);
+  color: #ffffff;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 40px;
+  align-items: center;
+  overflow: hidden;
+}
+
+.cta-heading {
+  font-size: 2.4rem;
+  font-weight: 900;
+  line-height: 1.15;
+  margin-bottom: 12px;
+}
+
+.cta-subheading {
+  font-size: 1.05rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 28px;
+  line-height: 1.5;
+}
+
+.cta-action-area {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.cta-btn {
+  background-color: #ffffff;
+  color: var(--primary-orange);
+  font-size: 1rem;
+  font-weight: 800;
+  padding: 14px 28px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.cta-btn:hover {
+  background-color: #f8fafc;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.25);
+}
+
+.cta-note {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.cta-image-slot {
+  width: 100%;
+}
+
+@media (max-width: 992px) {
+  .cta-card {
+    grid-template-columns: 1fr;
+    padding: 32px 24px;
+  }
+}

@@ -1,0 +1,50 @@
+.image-placeholder-box {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 2px dashed rgba(255, 255, 255, 0.25);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  min-height: 180px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.image-placeholder-box:hover {
+  border-color: var(--primary-orange);
+  background-color: rgba(255, 90, 31, 0.04);
+}
+
+.placeholder-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.placeholder-icon {
+  width: 42 h-42;
+  color: var(--primary-orange);
+  opacity: 0.8;
+}
+
+.placeholder-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.placeholder-subtext {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-family: monospace;
+}
+
+.real-image {
+  border-radius: 16px;
+  display: block;
+}

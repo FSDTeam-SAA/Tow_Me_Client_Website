@@ -1,0 +1,270 @@
+.hero-section {
+  position: relative;
+  background-color: var(--dark-navy);
+  height: 430px;
+  margin-bottom: 90px;
+  overflow: visible;
+  color: #ffffff;
+}
+
+.hero-bg-image {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  z-index: 1;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(14, 23, 38, 0.82) 0%, rgba(20, 32, 54, 0.9) 100%);
+  z-index: 2;
+}
+
+.hero-container {
+  position: relative;
+  z-index: 10;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1fr 390px;
+  gap: 40px;
+  align-items: flex-start;
+  padding-top: 25px;
+}
+
+/* Right Content Column (RTL) */
+.hero-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  z-index: 15;
+  max-width: 560px;
+}
+
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -1px;
+}
+
+.text-orange-glow {
+  color: var(--primary-orange);
+  text-shadow: 0 0 25px rgba(255, 90, 31, 0.45);
+}
+
+.hero-subtitle {
+  font-size: 1.2rem;
+  color: #cbd5e1;
+  line-height: 1.45;
+}
+
+.highlight-text {
+  color: var(--primary-orange);
+  font-weight: 800;
+  text-decoration: underline;
+}
+
+/* 4 Stat Badges */
+.hero-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+  z-index: 20;
+}
+
+.hero-badge-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 7px 15px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.badge-icon {
+  width: 15px;
+  height: 15px;
+}
+
+.text-yellow { color: #fbbf24; }
+.text-cyan { color: #38bdf8; }
+.text-green { color: #34d399; }
+.text-orange { color: var(--primary-orange); }
+
+/* Left Form Card (RTL) - Overflows past the bottom of the dark hero background by ~70px into white background */
+.hero-form-card {
+  background-color: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  color: var(--text-dark);
+  z-index: 15;
+  width: 390px;
+  position: relative;
+  top: 10px;
+}
+
+.card-header {
+  background-color: #ffffff;
+  color: var(--text-dark);
+  padding: 18px 24px 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.25rem;
+  font-weight: 900;
+}
+
+.header-icon-blue {
+  width: 34px;
+  height: 34px;
+  background-color: #0e93b4;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-body {
+  padding: 12px 24px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.input-with-icon {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.field-icon {
+  position: absolute;
+  right: 12px;
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+}
+
+.hero-input, .hero-select {
+  width: 100%;
+  padding: 11px 14px 11px 42px;
+  padding-right: 38px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  color: var(--text-dark);
+  font-family: inherit;
+  background-color: #f8fafc;
+  transition: all 0.2s ease;
+}
+
+.hero-input:focus, .hero-select:focus {
+  outline: none;
+  border-color: var(--primary-orange);
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(255, 90, 31, 0.15);
+}
+
+.gps-pill-btn {
+  position: absolute;
+  left: 8px;
+  background-color: #ffebe5;
+  color: var(--primary-orange);
+  border: 1px solid rgba(255, 90, 31, 0.3);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  transition: all 0.2s ease;
+}
+
+.gps-pill-btn:hover {
+  background-color: var(--primary-orange);
+  color: #ffffff;
+}
+
+.form-submit-btn {
+  width: 100%;
+  padding: 13px;
+  font-size: 0.98rem;
+  border-radius: 14px;
+  margin-top: 4px;
+}
+
+.form-footer-note {
+  text-align: center;
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+/* Rescuer Upper Image matching blue outline box 604x403 in screenshot 1:1 */
+.hero-upper-img-wrap {
+  position: absolute;
+  bottom: -60px;
+  right: calc((100% - 1200px) / 2 + 10px);
+  z-index: 5;
+  width: 610px;
+  pointer-events: none;
+}
+
+.hero-upper-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.45));
+}
+
+@media (max-width: 1240px) {
+  .hero-upper-img-wrap {
+    right: 10px;
+    width: 530px;
+    bottom: -45px;
+  }
+}
+
+@media (max-width: 992px) {
+  .hero-section {
+    height: auto;
+    margin-bottom: 40px;
+  }
+  .hero-container {
+    grid-template-columns: 1fr;
+    padding-top: 20px;
+  }
+  .hero-form-card {
+    width: 100%;
+    top: 0;
+  }
+  .hero-upper-img-wrap {
+    position: relative;
+    bottom: 0;
+    right: 0;
+    margin: 20px auto 0;
+    width: 100%;
+    max-width: 500px;
+  }
+}
