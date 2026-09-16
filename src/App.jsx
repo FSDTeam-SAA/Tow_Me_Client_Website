@@ -20,10 +20,8 @@ import {
   MapPin,
   Menu,
   MessageCircle,
-  Minus,
   Navigation,
   Phone,
-  Plus,
   ReceiptText,
   Search,
   ShieldCheck,
@@ -45,6 +43,8 @@ import mapTruck from "../../tow_me-flutter/assets/images/map_truck.png";
 import towingPhoto from "../../tow_me-flutter/assets/images/towing_vehicle_photo.png";
 import { api, clearSession, getStoredSession } from "./api";
 import ReferenceHomePage from "./components/ReferenceHomePage";
+import BookingMap from "./components/BookingMap/BookingMap";
+import LocationSearchInput from "./components/LocationSearchInput/LocationSearchInput";
 import "./App.css";
 
 const STEPS = [
@@ -89,10 +89,10 @@ const WEIGHT_BANDS = ["2.6-5", "5.1-8", "8.1-12", "12.1-20", "20.1-60"];
 const DEFAULT_BOOKING = {
   pickupAddress: "",
   dropoffAddress: "",
-  pickupLat: 32.0853,
-  pickupLng: 34.7818,
-  dropoffLat: 32.0621,
-  dropoffLng: 34.7724,
+  pickupLat: null,
+  pickupLng: null,
+  dropoffLat: null,
+  dropoffLng: null,
   issue: "breakdown",
   issueDetails: "",
   vehicleType: "car",
@@ -105,7 +105,7 @@ const DEFAULT_BOOKING = {
   color: "",
   vehicleState: "not_drivable",
   vehicleNotes: "",
-  paymentMethod: "card",
+  paymentMethod: "cash",
   contactName: "",
   contactPhone: "",
   smsUpdates: true,
@@ -589,19 +589,12 @@ function TrustStrip() {
   );
 }
 
-function EstimateCard({ booking, activeStep, estimate }) {
+function EstimateCard({ booking, activeStep, estimate, onMapSelect }) {
   const issue = ISSUES.find((item) => item.id === booking.issue);
   return (
     <aside className="booking-aside">
       {activeStep === 1 && (
-        <div className="mini-map mini-map--pin">
-          <span className="availability-dot">● 5 גרריסטים זמינים</span>
-          <div className="map-grid" />
-          <div className="pulse-pin">
-            <MapPin />
-          </div>
-          <strong>{booking.pickupAddress || "המיקום שלך יוצג כאן"}</strong>
-        </div>
+        <BookingMap booking={booking} onSelect={onMapSelect} />
       )}
       <div className="summary-card">
         <div className="aside-title">
@@ -666,7 +659,15 @@ function EstimateCard({ booking, activeStep, estimate }) {
   );
 }
 
-function LocationStep({ booking, setBooking, onNext, locating, onLocate }) {
+function LocationStep({
+  booking,
+  onAddressChange,
+  onPlaceSelect,
+  onNext,
+  locating,
+  onLocate,
+  error,
+}) {
   return (
     <form className="booking-card" onSubmit={onNext}>
       <header className="booking-card-title">
@@ -683,33 +684,25 @@ function LocationStep({ booking, setBooking, onNext, locating, onLocate }) {
           <KeyRound size={16} /> פרטי מיקום
         </h3>
         <label>מיקום נוכחי *</label>
-        <div className="input-control">
-          <LocateFixed />
-          <input
-            value={booking.pickupAddress}
-            onChange={(event) =>
-              setBooking({ ...booking, pickupAddress: event.target.value })
-            }
-            placeholder="הכנס כתובת או לחץ לזיהוי אוטומטי"
-            required
-          />
-        </div>
+        <LocationSearchInput
+          kind="pickup"
+          value={booking.pickupAddress}
+          onChange={(value) => onAddressChange("pickup", value)}
+          onSelect={(place) => onPlaceSelect("pickup", place)}
+          placeholder="הכנס כתובת או לחץ לזיהוי אוטומטי"
+        />
         <button className="location-button" type="button" onClick={onLocate}>
           <MapPin size={17} />{" "}
           {locating ? "מזהה מיקום..." : "זהה מיקום אוטומטית"}
         </button>
         <label>יעד *</label>
-        <div className="input-control">
-          <Navigation />
-          <input
-            value={booking.dropoffAddress}
-            onChange={(event) =>
-              setBooking({ ...booking, dropoffAddress: event.target.value })
-            }
-            placeholder="לאן לגרור את הרכב?"
-            required
-          />
-        </div>
+        <LocationSearchInput
+          kind="dropoff"
+          value={booking.dropoffAddress}
+          onChange={(value) => onAddressChange("dropoff", value)}
+          onSelect={(place) => onPlaceSelect("dropoff", place)}
+          placeholder="לאן לגרור את הרכב?"
+        />
       </div>
       <div className="form-section">
         <h3>
@@ -744,6 +737,11 @@ function LocationStep({ booking, setBooking, onNext, locating, onLocate }) {
           rows="4"
         />
       </div>
+      {error && (
+        <div className="form-error">
+          <AlertTriangle /> {error}
+        </div>
+      )}
       <button className="primary-button" type="submit">
         המשך <ArrowLeft />
       </button>
@@ -751,7 +749,7 @@ function LocationStep({ booking, setBooking, onNext, locating, onLocate }) {
   );
 }
 
-function VehicleStep({ booking, setBooking, onBack, onNext }) {
+function VehicleStep({ booking, setBooking, onBack, onNext, estimating, error }) {
   const [manufacturers, setManufacturers] = useState(FALLBACK_MAKES);
   const [models, setModels] = useState([]);
   const [loadingMakes, setLoadingMakes] = useState(false);
@@ -1003,12 +1001,17 @@ function VehicleStep({ booking, setBooking, onBack, onNext }) {
           {booking.vehicleNotes.length} / 300 תווים
         </small>
       </div>
+      {error && (
+        <div className="form-error">
+          <AlertTriangle /> {error}
+        </div>
+      )}
       <div className="form-actions">
         <button className="secondary-button" type="button" onClick={onBack}>
           <ArrowRight /> חזרה
         </button>
-        <button className="primary-button" type="submit">
-          המשך <ArrowLeft />
+        <button className="primary-button" type="submit" disabled={estimating}>
+          {estimating ? "מחשב מחיר..." : "המשך"} <ArrowLeft />
         </button>
       </div>
     </form>
@@ -1028,11 +1031,11 @@ function FindingStep({ booking, estimate, onBack, onContinue }) {
     <div className="finding-layout">
       <div className="finding-main">
         <header className="finding-title">
-          <h1>{seconds ? "נמצא גרר בקרבת מקום" : "מצאנו גרריסט מתאים!"}</h1>
+          <h1>{seconds ? "מחשב את מסלול הגרירה" : "הערכת הנסיעה מוכנה"}</h1>
           <p>
             {seconds
-              ? `5 גרריסטים זמינים כרגע ברדיוס ${seconds} ק״מ...`
-              : "דוד כהן זמין ויכול להגיע אליך במהירות"}
+              ? "בודקים מרחק, זמן ומחיר לפי נקודות האיסוף והיעד..."
+              : "לאחר אישור ההזמנה נהגים זמינים יוכלו לקבל את הקריאה"}
           </p>
         </header>
         <div className="radar-stage">
@@ -1056,15 +1059,15 @@ function FindingStep({ booking, estimate, onBack, onContinue }) {
         </div>
         <div className="driver-preview">
           <div className="driver-avatar">
-            <UserRound />
+            <ReceiptText />
           </div>
           <div>
-            <span className="stars">★ 4.9</span>
-            <h3>דוד כהן</h3>
-            <p>Ford F-250 · גרר שטוח · נהג מוסמך</p>
+            <span className="stars">הערכה בזמן אמת</span>
+            <h3>₪{estimate.total || 0}</h3>
+            <p>{estimate.distanceKm || 0} ק״מ · כולל מע״מ</p>
           </div>
           <div className="eta-box">
-            <strong>8</strong>
+            <strong>{estimate.durationMinutes || 15}</strong>
             <small>דקות</small>
           </div>
         </div>
@@ -1078,17 +1081,12 @@ function FindingStep({ booking, estimate, onBack, onContinue }) {
             onClick={onContinue}
             disabled={seconds > 0}
           >
-            {seconds > 0 ? `מחפש... ${seconds}` : "המשך לתשלום"} <ArrowLeft />
+            {seconds > 0 ? `מחשב... ${seconds}` : "המשך לאישור"} <ArrowLeft />
           </button>
         </div>
       </div>
       <div className="finding-side">
-        <div className="mini-map">
-          <span className="availability-dot">● 5 זמינים</span>
-          <div className="map-grid" />
-          <img className="moving-truck" src={mapTruck} alt="גרר על המפה" />
-          <span className="you-dot" />
-        </div>
+        <BookingMap booking={booking} readOnly />
         <EstimateCard booking={booking} activeStep={3} estimate={estimate} />
       </div>
     </div>
@@ -1104,12 +1102,6 @@ function PaymentStep({
   submitting,
   error,
 }) {
-  const [card, setCard] = useState({
-    number: "",
-    expiry: "",
-    cvv: "",
-    name: "",
-  });
   return (
     <div className="payment-layout">
       <aside className="payment-summary">
@@ -1139,11 +1131,11 @@ function PaymentStep({
           </div>
           <div className="summary-row">
             <small>גרריסט</small>
-            <strong>דוד כהן · ★ 4.9</strong>
+            <strong>ישובץ לאחר אישור ההזמנה</strong>
           </div>
           <div className="summary-row">
-            <small>זמן הגעה</small>
-            <strong>כ־8 דקות</strong>
+            <small>משך נסיעה משוער</small>
+            <strong>כ־{estimate.durationMinutes || 15} דקות</strong>
           </div>
           <div className="price-breakdown">
             <span>
@@ -1158,12 +1150,12 @@ function PaymentStep({
           </div>
         </div>
         <div className="security-card">
-          <h3>אבטחה ואמינות</h3>
+          <h3>אישור הזמנה מאובטח</h3>
           <span>
-            <LockKeyhole /> תשלום מאובטח SSL
+            <LockKeyhole /> פרטי ההזמנה נשלחים בחיבור SSL
           </span>
           <span>
-            <ShieldCheck /> הגנת רכישה מלאה
+            <ShieldCheck /> המחיר מחושב בשרת TOW ME
           </span>
           <span>
             <TimerReset /> ביטול חינם תוך 5 דקות
@@ -1184,8 +1176,8 @@ function PaymentStep({
             <LockKeyhole />
           </span>
           <div>
-            <h1>תשלום ואישור הזמנה</h1>
-            <p>השלם את התשלום כדי לאשר את הזמנתך</p>
+            <h1>אישור הזמנה</h1>
+            <p>אשר את הפרטים כדי לשלוח את הקריאה לגרריסטים זמינים</p>
           </div>
         </header>
         <div className="payment-section">
@@ -1194,13 +1186,14 @@ function PaymentStep({
           </h3>
           <div className="payment-methods">
             {[
-              { id: "card", label: "כרטיס אשראי", icon: CreditCard },
-              { id: "wallet", label: "Apple / Google Pay", icon: WalletCards },
-              { id: "cash", label: "מזומן לנהג", icon: CircleDollarSign },
-            ].map(({ id, label, icon: Icon }) => (
+              { id: "cash", label: "תשלום לנהג", icon: CircleDollarSign, available: true },
+              { id: "card", label: "כרטיס — בקרוב", icon: CreditCard, available: false },
+              { id: "wallet", label: "ארנק דיגיטלי — בקרוב", icon: WalletCards, available: false },
+            ].map(({ id, label, icon: Icon, available }) => (
               <button
                 className={booking.paymentMethod === id ? "selected" : ""}
                 type="button"
+                disabled={!available}
                 onClick={() => setBooking({ ...booking, paymentMethod: id })}
                 key={id}
               >
@@ -1210,77 +1203,7 @@ function PaymentStep({
               </button>
             ))}
           </div>
-          {booking.paymentMethod === "card" && (
-            <>
-              <div className="credit-card-preview">
-                <span>TOW ME</span>
-                <CreditCard />
-                <b>•••• •••• •••• {card.number.slice(-4) || "0000"}</b>
-                <small>
-                  {card.name || "שם בעל הכרטיס"} · {card.expiry || "MM/YY"}
-                </small>
-              </div>
-              <label>
-                מספר כרטיס
-                <input
-                  inputMode="numeric"
-                  value={card.number}
-                  onChange={(event) =>
-                    setCard({
-                      ...card,
-                      number: event.target.value
-                        .replace(/\D/g, "")
-                        .slice(0, 16),
-                    })
-                  }
-                  placeholder="0000 0000 0000 0000"
-                  required
-                />
-              </label>
-              <div className="field-grid">
-                <label>
-                  תוקף
-                  <input
-                    value={card.expiry}
-                    onChange={(event) =>
-                      setCard({
-                        ...card,
-                        expiry: event.target.value.slice(0, 5),
-                      })
-                    }
-                    placeholder="MM / YY"
-                    required
-                  />
-                </label>
-                <label>
-                  CVV
-                  <input
-                    inputMode="numeric"
-                    value={card.cvv}
-                    onChange={(event) =>
-                      setCard({
-                        ...card,
-                        cvv: event.target.value.replace(/\D/g, "").slice(0, 4),
-                      })
-                    }
-                    placeholder="•••"
-                    required
-                  />
-                </label>
-              </div>
-              <label>
-                שם בעל הכרטיס
-                <input
-                  value={card.name}
-                  onChange={(event) =>
-                    setCard({ ...card, name: event.target.value })
-                  }
-                  placeholder="שם מלא כפי שמופיע על הכרטיס"
-                  required
-                />
-              </label>
-            </>
-          )}
+          <p className="helper-text">התשלום מתבצע ישירות מול הנהג לאחר קבלת השירות.</p>
         </div>
         <div className="payment-section">
           <h3>
@@ -1340,12 +1263,12 @@ function PaymentStep({
             <Check />{" "}
             {submitting
               ? "מאשר הזמנה..."
-              : `אשר הזמנה — ₪${estimate.total || 0}`}{" "}
+              : `שלח הזמנה — ₪${estimate.total || 0}`}{" "}
             <ArrowLeft />
           </button>
         </div>
         <small className="payment-privacy">
-          <LockKeyhole /> פרטי הכרטיס אינם נשמרים או נשלחים לשרת TOW ME
+          <LockKeyhole /> לא נאספים באתר פרטי כרטיס אשראי
         </small>
       </form>
     </div>
@@ -1361,8 +1284,8 @@ function TrackingScreen({
   cancelling,
 }) {
   const driver = tracking?.driver;
-  const eta = tracking?.etaMinutes || 8;
-  const orderNumber = trip?.tripNumber || "TM-2024-7841";
+  const eta = tracking?.etaMinutes;
+  const orderNumber = trip?.tripNumber || "—";
   return (
     <main className="tracking-page">
       <section className="success-banner">
@@ -1373,7 +1296,7 @@ function TrackingScreen({
           <div>
             <h1>ההזמנה אושרה!</h1>
             <p>
-              מספר הזמנה: <strong>#{orderNumber}</strong> · שולם בהצלחה{" "}
+              מספר הזמנה: <strong>#{orderNumber}</strong> · לתשלום לנהג{" "}
               <strong>₪{trip?.price || estimate.total || 0}</strong>
             </p>
           </div>
@@ -1382,11 +1305,13 @@ function TrackingScreen({
               <CheckCircle2 /> אושר
             </span>
             <span>
-              <Truck /> בדרך אליך
+              <Truck /> {driver ? "גרריסט שובץ" : "ממתין לגרריסט"}
             </span>
-            <span>
-              <Clock3 /> הגעה ב־{eta} דק׳
-            </span>
+            {eta && (
+              <span>
+                <Clock3 /> הגעה ב־{eta} דק׳
+              </span>
+            )}
           </div>
         </div>
       </section>
@@ -1429,13 +1354,13 @@ function TrackingScreen({
               </strong>
             </div>
             <div className="summary-row">
-              <small>סכום ששולם</small>
+              <small>סכום לתשלום לנהג</small>
               <strong className="green-text">
                 ₪{trip?.price || estimate.total || 0}
               </strong>
             </div>
-            <button className="receipt-button" type="button">
-              <ReceiptText /> הורד קבלה
+            <button className="receipt-button" type="button" onClick={() => window.print()}>
+              <ReceiptText /> הדפס פרטי הזמנה
             </button>
           </div>
           <div className="rating-card is-disabled">
@@ -1462,32 +1387,7 @@ function TrackingScreen({
               <h2>מעקב חי בזמן אמת</h2>
               <span>● עדכני לפני 30 שניות</span>
             </header>
-            <div className="live-map">
-              <div className="map-grid" />
-              <button className="map-control map-control--plus">
-                <Plus />
-              </button>
-              <button className="map-control map-control--minus">
-                <Minus />
-              </button>
-              <span className="route-line" />
-              <img src={mapTruck} alt="מיקום הגרר" className="tracking-truck" />
-              <span className="destination-pin">
-                <MapPin />
-              </span>
-              <span className="distance-label">1.2 ק״מ</span>
-              <div className="map-legend">
-                <span>
-                  <i className="orange-dot" />{" "}
-                  {driver
-                    ? `${driver.firstName} ${driver.lastName}`
-                    : "הגרריסט"}
-                </span>
-                <span>
-                  <i className="blue-dot" /> המיקום שלך
-                </span>
-              </div>
-            </div>
+            <BookingMap booking={booking} driver={driver} readOnly />
             <div className="timeline">
               <div className="complete">
                 <i>
@@ -1495,7 +1395,7 @@ function TrackingScreen({
                 </i>
                 <span>
                   <strong>הזמנה אושרה</strong>
-                  <small>התשלום עבר בהצלחה</small>
+                  <small>הקריאה נשלחה לגרריסטים זמינים</small>
                 </span>
               </div>
               <div className={driver ? "complete" : "active"}>
@@ -1554,10 +1454,12 @@ function TrackingScreen({
                 {driver?.licenseNumber || "נהג מוסמך"}
               </p>
             </div>
-            <span className="eta-box">
-              <strong>{eta}</strong>
-              <small>דקות</small>
-            </span>
+            {eta && (
+              <span className="eta-box">
+                <strong>{eta}</strong>
+                <small>דקות</small>
+              </span>
+            )}
             <a
               className="call-driver"
               href={
@@ -1568,9 +1470,15 @@ function TrackingScreen({
             >
               <Phone /> התקשר לגרריסט
             </a>
-            <button className="message-driver">
-              <MessageCircle /> שלח הודעה
-            </button>
+            {driver?.phoneNumber ? (
+              <a className="message-driver" href={`sms:${driver.phoneNumber}`}>
+                <MessageCircle /> שלח הודעה
+              </a>
+            ) : (
+              <button className="message-driver" type="button" disabled>
+                <MessageCircle /> הודעה לאחר שיבוץ
+              </button>
+            )}
           </section>
         </div>
       </div>
@@ -1580,17 +1488,32 @@ function TrackingScreen({
 
 function AuthDialog({ open, onClose, onSuccess }) {
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpRequested, setOtpRequested] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  useEffect(() => {
+    if (!open) {
+      setOtp("");
+      setOtpRequested(false);
+      setError("");
+    }
+  }, [open]);
   if (!open) return null;
   const submit = async (event) => {
     event.preventDefault();
     setLoading(true);
     setError("");
     try {
-      const user = await api.login(phoneNumber, password);
-      onSuccess(user);
+      if (!otpRequested) {
+        await api.requestCustomerOtp(phoneNumber);
+        setOtpRequested(true);
+      } else {
+        const user = await api.verifyCustomerOtp(phoneNumber, otp);
+        onSuccess(user);
+        setOtp("");
+        setOtpRequested(false);
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -1615,8 +1538,12 @@ function AuthDialog({ open, onClose, onSuccess }) {
           <X />
         </button>
         <Brand />
-        <h2 id="login-title">כניסה לחשבון לקוח</h2>
-        <p>התחבר כדי לאשר את ההזמנה ולעקוב אחרי הנהג.</p>
+        <h2 id="login-title">{otpRequested ? "אימות מספר טלפון" : "כניסה מהירה"}</h2>
+        <p>
+          {otpRequested
+            ? `שלחנו קוד אימות למספר ${phoneNumber}`
+            : "הזן מספר טלפון. לקוח חדש יירשם אוטומטית."}
+        </p>
         <form onSubmit={submit}>
           <label>
             מספר טלפון
@@ -1626,26 +1553,47 @@ function AuthDialog({ open, onClose, onSuccess }) {
               placeholder="05X-XXX-XXXX"
               required
               autoFocus
+              disabled={otpRequested}
             />
           </label>
-          <label>
-            סיסמה
-            <input
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="הסיסמה שלך"
-              required
-            />
-          </label>
+          {otpRequested && (
+            <label>
+              קוד אימות
+              <input
+                inputMode="numeric"
+                value={otp}
+                onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="הזן את הקוד שקיבלת"
+                required
+                autoFocus
+              />
+            </label>
+          )}
           {error && (
             <div className="form-error">
               <AlertTriangle /> {error}
             </div>
           )}
           <button className="primary-button" disabled={loading}>
-            {loading ? "מתחבר..." : "כניסה לחשבון"}
+            {loading
+              ? "נא להמתין..."
+              : otpRequested
+                ? "אמת והמשך"
+                : "שלח קוד אימות"}
           </button>
+          {otpRequested && (
+            <button
+              className="nav-text-button"
+              type="button"
+              onClick={() => {
+                setOtpRequested(false);
+                setOtp("");
+                setError("");
+              }}
+            >
+              שינוי מספר טלפון
+            </button>
+          )}
         </form>
         <small>
           <LockKeyhole /> החיבור מתבצע ישירות לשרת TOW ME המאובטח
@@ -1677,6 +1625,7 @@ export default function App() {
   const [trip, setTrip] = useState(null);
   const [tracking, setTracking] = useState(null);
   const [locating, setLocating] = useState(false);
+  const [estimating, setEstimating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [error, setError] = useState("");
@@ -1713,25 +1662,55 @@ export default function App() {
     setError("");
     setScreen("location");
   };
+  const changeAddress = (kind, address) => {
+    const isPickup = kind === "pickup";
+    setBooking((current) => ({
+      ...current,
+      [isPickup ? "pickupAddress" : "dropoffAddress"]: address,
+      [isPickup ? "pickupLat" : "dropoffLat"]: null,
+      [isPickup ? "pickupLng" : "dropoffLng"]: null,
+    }));
+    setError("");
+  };
+  const selectPlace = (kind, place) => {
+    const isPickup = kind === "pickup";
+    setBooking((current) => ({
+      ...current,
+      [isPickup ? "pickupAddress" : "dropoffAddress"]: place.label,
+      [isPickup ? "pickupLat" : "dropoffLat"]: Number(place.lat),
+      [isPickup ? "pickupLng" : "dropoffLng"]: Number(place.lng),
+    }));
+    setError("");
+  };
+  const selectMapLocation = async (kind, lat, lng) => {
+    try {
+      const place = await api.reverseGeocode(lat, lng);
+      selectPlace(kind, place);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
   const detectLocation = () => {
     setLocating(true);
     if (!navigator.geolocation) {
-      setBooking((current) => ({
-        ...current,
-        pickupAddress: "המיקום הנוכחי שלי",
-      }));
+      setError("הדפדפן הזה אינו תומך בזיהוי מיקום. אפשר לבחור נקודה במפה.");
       setLocating(false);
       return;
     }
     navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        setBooking((current) => ({
-          ...current,
-          pickupAddress: "המיקום הנוכחי שלי",
-          pickupLat: coords.latitude,
-          pickupLng: coords.longitude,
-        }));
-        setLocating(false);
+      async ({ coords }) => {
+        try {
+          const place = await api.reverseGeocode(coords.latitude, coords.longitude);
+          selectPlace("pickup", place);
+        } catch {
+          selectPlace("pickup", {
+            label: "המיקום הנוכחי שלי",
+            lat: coords.latitude,
+            lng: coords.longitude,
+          });
+        } finally {
+          setLocating(false);
+        }
       },
       () => {
         setError("לא הצלחנו לזהות מיקום. אפשר להזין כתובת ידנית.");
@@ -1741,7 +1720,8 @@ export default function App() {
     );
   };
   const tryEstimate = async () => {
-    if (!session.token) return;
+    setEstimating(true);
+    setError("");
     try {
       const data = await api.estimateTrip({
         pickupLat: booking.pickupLat,
@@ -1754,11 +1734,15 @@ export default function App() {
         weightBand: booking.weightBand || undefined,
       });
       setEstimate(data);
-    } catch {
-      /* createTrip remains authoritative */
+      return data;
+    } catch (err) {
+      setError(err.message);
+      return null;
+    } finally {
+      setEstimating(false);
     }
   };
-  const createBooking = async () => {
+  const createBooking = async (contactOverride = {}) => {
     if (!getStoredSession().token) {
       setPendingCheckout(true);
       setAuthOpen(true);
@@ -1785,6 +1769,9 @@ export default function App() {
           color: booking.color,
         },
         paymentMethod: booking.paymentMethod,
+        contactName: contactOverride.name || booking.contactName,
+        contactPhone: contactOverride.phoneNumber || booking.contactPhone,
+        smsUpdates: booking.smsUpdates,
         notes: [
           booking.issueDetails,
           booking.vehicleNotes,
@@ -1810,16 +1797,20 @@ export default function App() {
     }
   };
   const handleAuthSuccess = (user) => {
+    const resolvedContact = {
+      name: booking.contactName || user.name || "",
+      phoneNumber: booking.contactPhone || user.phoneNumber || "",
+    };
     setSession(getStoredSession());
     setBooking((current) => ({
       ...current,
-      contactName: current.contactName || user.name || "",
-      contactPhone: current.contactPhone || user.phoneNumber || "",
+      contactName: resolvedContact.name,
+      contactPhone: resolvedContact.phoneNumber,
     }));
     setAuthOpen(false);
     if (pendingCheckout) {
       setPendingCheckout(false);
-      window.setTimeout(createBooking, 0);
+      window.setTimeout(() => createBooking(resolvedContact), 0);
     }
   };
   const handleLogout = () => {
@@ -1858,11 +1849,23 @@ export default function App() {
                 <>
                   <LocationStep
                     booking={booking}
-                    setBooking={setBooking}
+                    onAddressChange={changeAddress}
+                    onPlaceSelect={selectPlace}
                     locating={locating}
                     onLocate={detectLocation}
+                    error={error}
                     onNext={(event) => {
                       event.preventDefault();
+                      if (
+                        !Number.isFinite(booking.pickupLat) ||
+                        !Number.isFinite(booking.pickupLng) ||
+                        !Number.isFinite(booking.dropoffLat) ||
+                        !Number.isFinite(booking.dropoffLng)
+                      ) {
+                        setError("יש לבחור כתובת מהרשימה או לסמן את נקודות האיסוף והיעד במפה.");
+                        return;
+                      }
+                      setError("");
                       setScreen("vehicle");
                     }}
                   />
@@ -1870,6 +1873,7 @@ export default function App() {
                     booking={booking}
                     activeStep={1}
                     estimate={estimate}
+                    onMapSelect={selectMapLocation}
                   />
                 </>
               )}
@@ -1879,9 +1883,11 @@ export default function App() {
                     booking={booking}
                     setBooking={setBooking}
                     onBack={() => setScreen("location")}
-                    onNext={() => {
-                      tryEstimate();
-                      setScreen("finding");
+                    estimating={estimating}
+                    error={error}
+                    onNext={async () => {
+                      const result = await tryEstimate();
+                      if (result) setScreen("finding");
                     }}
                   />
                   <EstimateCard

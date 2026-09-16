@@ -60,11 +60,31 @@ export const api = {
     storeSession(data)
     return data
   },
+  requestCustomerOtp(phoneNumber, name = '') {
+    return request('/auth/customer/otp-request', {
+      method: 'POST',
+      body: JSON.stringify({ phoneNumber, name }),
+    })
+  },
+  async verifyCustomerOtp(phoneNumber, otp) {
+    const data = await request('/auth/verify-otp', {
+      method: 'POST',
+      body: JSON.stringify({ phoneNumber, otp }),
+    })
+    storeSession(data)
+    return data
+  },
   getManufacturers() {
     return request('/vehicles/manufacturers')
   },
   getModels(manufacturerId) {
     return request(`/vehicles/models?manufacturerId=${encodeURIComponent(manufacturerId)}`)
+  },
+  searchLocations(query) {
+    return request(`/locations/search?q=${encodeURIComponent(query)}`)
+  },
+  reverseGeocode(lat, lng) {
+    return request(`/locations/reverse?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`)
   },
   estimateTrip(payload) {
     return request('/trips/estimate', { method: 'POST', body: JSON.stringify(payload) })

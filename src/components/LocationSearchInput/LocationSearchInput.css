@@ -1,0 +1,7 @@
+.location-search { position: relative; }
+.location-search__loading { position: absolute; left: 15px; width: 17px; height: 17px; border: 2px solid #d8e2ed; border-top-color: #1699b9; border-radius: 50%; animation: location-spin .75s linear infinite; }
+.location-search__results { position: absolute; z-index: 650; top: calc(100% + 6px); right: 0; left: 0; overflow: hidden; margin: 0; padding: 6px; list-style: none; border: 1px solid #dfe5ed; border-radius: 12px; background: #fff; box-shadow: 0 14px 35px rgba(17,43,80,.16); }
+.location-search__results button { width: 100%; display: flex; align-items: flex-start; gap: 9px; padding: 10px; border: 0; border-radius: 8px; color: #1a2d50; background: transparent; text-align: right; font: inherit; line-height: 1.4; }
+.location-search__results button:hover, .location-search__results button:focus { background: #f1f7fb; }
+.location-search__results svg { flex: 0 0 auto; margin-top: 2px; color: #ff642f; }
+@keyframes location-spin { to { transform: rotate(360deg); } }

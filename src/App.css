@@ -121,6 +121,7 @@
 .form-section > h3 svg, .payment-section > h3 svg { color: var(--orange); }
 .input-control { height: 52px; }
 .location-button { width: 100%; height: 48px; margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; color: #2f7ec6; background: #f1f7ff; border: 2px solid #68aaf6; border-radius: 10px; font-weight: 800; }
+.payment-methods button:disabled { cursor: not-allowed; opacity: .48; }
 .booking-card textarea, .payment-form input, .payment-form select, .booking-card select, .booking-card > input, .booking-card label > input { width: 100%; min-height: 50px; padding: 11px 14px; border: 1px solid #dfe4eb; border-radius: 10px; outline: 0; background: #fafbfd; }
 .booking-card textarea { min-height: 105px; resize: vertical; }
 .booking-card textarea:focus, .payment-form input:focus, .booking-card select:focus, .booking-card label > input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(22,153,185,.1); background: white; }

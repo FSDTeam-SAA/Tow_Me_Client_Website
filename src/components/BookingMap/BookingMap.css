@@ -1,0 +1,69 @@
+.booking-map {
+  position: relative;
+  min-height: 300px;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #dce8f4;
+  box-shadow: 0 16px 36px rgba(17, 43, 80, .16);
+}
+
+.booking-map .leaflet-container {
+  width: 100%;
+  height: 300px;
+  z-index: 1;
+  font-family: inherit;
+}
+
+.booking-map__toolbar {
+  position: absolute;
+  z-index: 500;
+  top: 12px;
+  left: 50%;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  transform: translateX(-50%);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .95);
+  box-shadow: 0 6px 20px rgba(17, 43, 80, .18);
+}
+
+.booking-map__toolbar button {
+  padding: 8px 11px;
+  border: 0;
+  border-radius: 9px;
+  color: #53647b;
+  background: transparent;
+  font: inherit;
+  font-size: .76rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.booking-map__toolbar button.active {
+  color: #fff;
+  background: #ff642f;
+}
+
+.booking-map__hint {
+  position: absolute;
+  z-index: 500;
+  right: 12px;
+  bottom: 12px;
+  max-width: calc(100% - 24px);
+  padding: 8px 12px;
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(17, 43, 80, .9);
+  font-size: .74rem;
+  font-weight: 800;
+  pointer-events: none;
+}
+
+@media (max-width: 720px) {
+  .booking-map,
+  .booking-map .leaflet-container {
+    min-height: 260px;
+    height: 260px;
+  }
+}
