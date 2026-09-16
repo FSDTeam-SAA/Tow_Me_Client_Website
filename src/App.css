@@ -6,6 +6,9 @@
 .header-inner { min-height: 82px; display: grid; grid-template-columns: 220px 1fr 220px; align-items: center; gap: 32px; }
 .header-inner > *, .hero-layout > *, .booking-layout > *, .payment-layout > *, .tracking-layout > * { min-width: 0; }
 .brand { justify-self: start; display: inline-flex; align-items: center; background: none; padding: 0; }
+.brand-mark { display: inline-flex; align-items: center; gap: 8px; font-size: 30px; line-height: 1; font-weight: 950; letter-spacing: -1px; color: var(--navy); }
+.brand-mark > span { color: var(--orange); }
+.brand--light .brand-mark { color: #fff; }
 .brand img { width: 194px; height: 58px; object-fit: contain; }
 .brand--light img { filter: brightness(0) invert(1); opacity: .96; }
 .main-nav { display: flex; align-items: center; justify-content: center; gap: clamp(20px,3vw,42px); font-weight: 700; color: #3b4960; }

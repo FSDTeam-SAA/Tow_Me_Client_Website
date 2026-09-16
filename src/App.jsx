@@ -38,9 +38,8 @@ import {
 import canvasConfetti from "canvas-confetti";
 import heroBackground from "./assets/Images/background_header_image.png";
 import rescueVehicle from "./assets/Images/background_image_upper.png";
-import towMeLogo from "../../tow_me-flutter/assets/images/tow_me_logo.png";
-import mapTruck from "../../tow_me-flutter/assets/images/map_truck.png";
-import towingPhoto from "../../tow_me-flutter/assets/images/towing_vehicle_photo.png";
+import mapTruck from "./assets/Images/tow_rescue_highres.png";
+import towingPhoto from "./assets/Images/cta_mechanic_reference.jpg";
 import { api, clearSession, getStoredSession } from "./api";
 import ReferenceHomePage from "./components/ReferenceHomePage";
 import BookingMap from "./components/BookingMap/BookingMap";
@@ -125,7 +124,7 @@ function Brand({ light = false }) {
       type="button"
       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
     >
-      <img src={towMeLogo} alt="TOW ME" />
+      <span className="brand-mark"><span>TOW</span> ME</span>
     </button>
   );
 }
