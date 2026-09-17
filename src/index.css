@@ -24,9 +24,11 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; direction: rtl; max-width: 100%; overflow-x: hidden; }
-body { margin: 0; min-width: 320px; min-height: 100vh; max-width: 100%; overflow-x: hidden; background: var(--canvas); color: var(--navy); direction: rtl; text-align: right; }
-#root { width: 100%; max-width: 100%; overflow-x: hidden; }
+html { scroll-behavior: smooth; direction: rtl; max-width: 100%; scroll-padding-top: 92px; overflow-x: clip; }
+body { margin: 0; min-width: 320px; min-height: 100vh; max-width: 100%; overflow-x: clip; background: var(--canvas); color: var(--navy); direction: rtl; text-align: right; }
+#root { width: 100%; max-width: 100%; }
+@media (max-width: 860px) { html { scroll-padding-top: 80px; } }
+@media (max-width: 600px) { html { scroll-padding-top: 70px; } }
 body, button, input, select, textarea { font-family: inherit; }
 button, input, select, textarea { font-size: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }

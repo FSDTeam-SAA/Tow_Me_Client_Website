@@ -1,8 +1,8 @@
-.app { width: 100%; max-width: 100%; min-height: 100vh; overflow: hidden; }
+.app { width: 100%; max-width: 100%; min-height: 100vh; overflow-x: clip; }
 .shell { width: min(1180px, calc(100% - 48px)); margin-inline: auto; }
 .orange-rule { height: 6px; background: var(--orange); }
-.site-header { position: relative; z-index: 50; width: 100%; margin: 0; background: rgba(255,255,255,.98); box-shadow: 0 6px 22px rgba(16,31,59,.13); }
-.site-header--compact { box-shadow: 0 5px 18px rgba(16,31,59,.12); }
+.site-header { position: sticky; top: 0; z-index: 100; width: 100%; margin: 0; background: rgba(255,255,255,.96); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 4px 20px rgba(16,31,59,.1); transition: box-shadow .2s ease, background .2s ease; }
+.site-header--compact { box-shadow: 0 4px 18px rgba(16,31,59,.12); }
 .header-inner { min-height: 82px; display: grid; grid-template-columns: 220px 1fr 220px; align-items: center; gap: 32px; }
 .header-inner > *, .hero-layout > *, .booking-layout > *, .payment-layout > *, .tracking-layout > * { min-width: 0; }
 .brand { justify-self: start; display: inline-flex; align-items: center; background: none; padding: 0; }

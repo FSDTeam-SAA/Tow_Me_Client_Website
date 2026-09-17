@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -40,6 +40,7 @@ import heroBackground from "./assets/Images/background_header_image.png";
 import rescueVehicle from "./assets/Images/background_image_upper.png";
 import mapTruck from "./assets/Images/tow_rescue_highres.png";
 import towingPhoto from "./assets/Images/cta_mechanic_reference.jpg";
+import brandLogo from "./assets/Images/logo.png";
 import { api, clearSession, getStoredSession } from "./api";
 import ReferenceHomePage from "./components/ReferenceHomePage";
 import BookingMap from "./components/BookingMap/BookingMap";
@@ -117,48 +118,84 @@ const FALLBACK_MAKES = [
   { id: 5, name: "Skoda" },
 ];
 
-function Brand({ light = false }) {
+function Brand({ light = false, onClick }) {
   return (
     <button
       className={`brand ${light ? "brand--light" : ""}`}
       type="button"
-      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      onClick={onClick || (() => window.scrollTo({ top: 0, behavior: "smooth" }))}
     >
-      <span className="brand-mark"><span>TOW</span> ME</span>
+      <img src={brandLogo} alt="TOW ME" />
     </button>
   );
 }
 
-function Header({ onBook, onLogin, session, onLogout, compact = false }) {
+function Header({
+  onBook,
+  onLogin,
+  session,
+  onLogout,
+  compact = false,
+  onNavigateSection,
+  onNavigateHome,
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const handleNavClick = (event, sectionId) => {
+    event.preventDefault();
+    setMenuOpen(false);
+    if (onNavigateSection) {
+      onNavigateSection(sectionId);
+    }
+  };
+
   return (
     <header className={`site-header ${compact ? "site-header--compact" : ""}`}>
       <div className="orange-rule" />
       <div className="shell header-inner">
-        <Brand />
+        <Brand onClick={onNavigateHome} />
         <nav
           className={`main-nav ${menuOpen ? "is-open" : ""}`}
           aria-label="ניווט ראשי"
         >
-          <a href="#services" onClick={() => setMenuOpen(false)}>
+          <a
+            href="#services"
+            onClick={(event) => handleNavClick(event, "services")}
+          >
             שירותים
           </a>
-          <a href="#about" onClick={() => setMenuOpen(false)}>
+          <a
+            href="#about"
+            onClick={(event) => handleNavClick(event, "about")}
+          >
             אודות
           </a>
-          <a href="#contact" onClick={() => setMenuOpen(false)}>
+          <a
+            href="#contact"
+            onClick={(event) => handleNavClick(event, "contact")}
+          >
             יצירת קשר
           </a>
           {session?.token ? (
             <button
               className="nav-text-button"
               type="button"
-              onClick={onLogout}
+              onClick={() => {
+                setMenuOpen(false);
+                onLogout();
+              }}
             >
               יציאה מהחשבון
             </button>
           ) : (
-            <button className="nav-text-button" type="button" onClick={onLogin}>
+            <button
+              className="nav-text-button"
+              type="button"
+              onClick={() => {
+                setMenuOpen(false);
+                onLogin();
+              }}
+            >
               כניסה לחשבון
             </button>
           )}
@@ -179,12 +216,19 @@ function Header({ onBook, onLogin, session, onLogout, compact = false }) {
   );
 }
 
-function Footer() {
+function Footer({ onNavigateSection, onNavigateHome }) {
+  const handleNavClick = (event, sectionId) => {
+    event.preventDefault();
+    if (onNavigateSection) {
+      onNavigateSection(sectionId);
+    }
+  };
+
   return (
     <footer className="site-footer" id="contact">
       <div className="shell footer-grid">
         <div className="footer-brand">
-          <Brand light />
+          <Brand light onClick={onNavigateHome} />
           <p>שירות גרר מקצועי וזמין עבורכם 24 שעות ביממה, 7 ימים בשבוע.</p>
           <div className="social-row">
             <span>f</span>
@@ -194,16 +238,30 @@ function Footer() {
         </div>
         <div>
           <h3>שירותים</h3>
-          <a href="#services">גרירת רכב</a>
-          <a href="#services">עזרה בדרך</a>
-          <a href="#services">פתיחת רכב נעול</a>
-          <a href="#services">הנעת רכב</a>
+          <a href="#services" onClick={(event) => handleNavClick(event, "services")}>
+            גרירת רכב
+          </a>
+          <a href="#services" onClick={(event) => handleNavClick(event, "services")}>
+            עזרה בדרך
+          </a>
+          <a href="#services" onClick={(event) => handleNavClick(event, "services")}>
+            פתיחת רכב נעול
+          </a>
+          <a href="#services" onClick={(event) => handleNavClick(event, "services")}>
+            הנעת רכב
+          </a>
         </div>
         <div>
           <h3>חברה</h3>
-          <a href="#about">אודות</a>
-          <a href="#reviews">הצטרפות כגרריסט</a>
-          <a href="#reviews">בלוג</a>
+          <a href="#about" onClick={(event) => handleNavClick(event, "about")}>
+            אודות
+          </a>
+          <a href="#reviews" onClick={(event) => handleNavClick(event, "reviews")}>
+            הצטרפות כגרריסט
+          </a>
+          <a href="#reviews" onClick={(event) => handleNavClick(event, "reviews")}>
+            בלוג
+          </a>
           <a href="#terms">תנאי שימוש</a>
         </div>
         <div>
@@ -224,7 +282,9 @@ function Footer() {
         <div>
           <a href="#privacy">מדיניות פרטיות</a>
           <a href="#terms">תנאי שימוש</a>
-          <a href="#accessibility">נגישות</a>
+          <a href="#contact" onClick={(event) => handleNavClick(event, "contact")}>
+            יצירת קשר
+          </a>
         </div>
       </div>
     </footer>
@@ -1604,17 +1664,21 @@ function AuthDialog({ open, onClose, onSuccess }) {
 
 export default function App() {
   const [screen, setScreen] = useState(() => {
-    const requested = new URLSearchParams(window.location.search).get("screen");
-    return [
+    const params = new URLSearchParams(window.location.search);
+    const requested = params.get("screen");
+    const hash = window.location.hash.replace("#", "");
+    if (["services", "about", "contact", "reviews"].includes(hash)) {
+      return "home";
+    }
+    const validScreens = [
       "home",
       "location",
       "vehicle",
       "finding",
       "payment",
       "tracking",
-    ].includes(requested)
-      ? requested
-      : "home";
+    ];
+    return validScreens.includes(requested) ? requested : "home";
   });
   const [booking, setBooking] = useState(DEFAULT_BOOKING);
   const [estimate, setEstimate] = useState({ total: 0, durationMinutes: 15 });
@@ -1632,6 +1696,70 @@ export default function App() {
     () => ({ location: 1, vehicle: 2, finding: 3, payment: 4 })[screen] || 0,
     [screen],
   );
+
+  const pendingScrollRef = useRef(null);
+
+  const scrollToSection = (targetId) => {
+    let attempts = 0;
+    const tryScroll = () => {
+      const el = document.getElementById(targetId);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+      } else if (attempts < 10) {
+        attempts++;
+        setTimeout(tryScroll, 60);
+      }
+    };
+    tryScroll();
+  };
+
+  const handleNavigateSection = (sectionId) => {
+    if (screen !== "home") {
+      pendingScrollRef.current = sectionId;
+      setScreen("home");
+    } else {
+      scrollToSection(sectionId);
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.delete("screen");
+    url.hash = `#${sectionId}`;
+    window.history.pushState({}, "", `${url.pathname}#${sectionId}`);
+  };
+
+  const handleNavigateHome = () => {
+    if (screen !== "home") {
+      setScreen("home");
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.delete("screen");
+    url.hash = "";
+    window.history.pushState({}, "", url.pathname || "/");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const requested = new URLSearchParams(window.location.search).get("screen");
+      const nextScreen = [
+        "home",
+        "location",
+        "vehicle",
+        "finding",
+        "payment",
+        "tracking",
+      ].includes(requested)
+        ? requested
+        : "home";
+      setScreen(nextScreen);
+      if (nextScreen === "home" && window.location.hash) {
+        const hashTarget = window.location.hash.replace("#", "");
+        setTimeout(() => scrollToSection(hashTarget), 80);
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
   useEffect(() => {
     if (screen !== "tracking" || !trip?._id || !session.token) return undefined;
     let active = true;
@@ -1649,12 +1777,31 @@ export default function App() {
       window.clearInterval(interval);
     };
   }, [screen, trip?._id, session.token]);
+
   useEffect(() => {
     const url = new URL(window.location.href);
-    if (screen === "home") url.searchParams.delete("screen");
-    else url.searchParams.set("screen", screen);
+    if (screen === "home") {
+      url.searchParams.delete("screen");
+    } else {
+      url.searchParams.set("screen", screen);
+    }
     window.history.replaceState({}, "", url);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    if (screen === "home") {
+      const target =
+        pendingScrollRef.current ||
+        (window.location.hash ? window.location.hash.replace("#", "") : null);
+      if (target) {
+        pendingScrollRef.current = null;
+        setTimeout(() => {
+          scrollToSection(target);
+        }, 80);
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   }, [screen]);
   const startBooking = (initial = {}) => {
     setBooking((current) => ({ ...current, ...initial }));
@@ -1837,6 +1984,8 @@ export default function App() {
         session={session}
         onLogout={handleLogout}
         compact={screen !== "home"}
+        onNavigateSection={handleNavigateSection}
+        onNavigateHome={handleNavigateHome}
       />
       {screen === "home" && <ReferenceHomePage onStart={startBooking} />}
       {activeStep > 0 && (
@@ -1929,7 +2078,10 @@ export default function App() {
           cancelling={cancelling}
         />
       )}
-      <Footer />
+      <Footer
+        onNavigateSection={handleNavigateSection}
+        onNavigateHome={handleNavigateHome}
+      />
       <AuthDialog
         open={authOpen}
         onClose={() => {
