@@ -41,6 +41,10 @@ import rescueVehicle from "./assets/Images/background_image_upper.png";
 import mapTruck from "./assets/Images/tow_rescue_highres.png";
 import towingPhoto from "./assets/Images/cta_mechanic_reference.jpg";
 import brandLogo from "./assets/Images/logo.png";
+import payAppleIcon from "./assets/Images/pay_apple.png";
+import payCardIcon from "./assets/Images/pay_card.png";
+import payLockIcon from "./assets/Images/pay_lock.png";
+import payPersonIcon from "./assets/Images/pay_person.png";
 import { api, clearSession, getStoredSession } from "./api";
 import ReferenceHomePage from "./components/ReferenceHomePage";
 import BookingMap from "./components/BookingMap/BookingMap";
@@ -105,7 +109,7 @@ const DEFAULT_BOOKING = {
   color: "",
   vehicleState: "not_drivable",
   vehicleNotes: "",
-  paymentMethod: "cash",
+  paymentMethod: "card",
   contactName: "",
   contactPhone: "",
   smsUpdates: true,
@@ -1161,60 +1165,107 @@ function PaymentStep({
   submitting,
   error,
 }) {
+  // 0 = Apple Pay, 1 = Bit, 2 = Credit Card (matching Flutter app)
+  const [method, setMethod] = useState(() => {
+    if (booking.paymentMethod === "wallet") return 0;
+    return 2;
+  });
+  const [saveCard, setSaveCard] = useState(true);
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardCvv, setCardCvv] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardHolder, setCardHolder] = useState("");
+
+  const handleSelectMethod = (idx) => {
+    setMethod(idx);
+    const methodStr = idx === 2 ? "card" : "wallet";
+    setBooking({ ...booking, paymentMethod: methodStr });
+  };
+
+  const handleCardNumberChange = (e) => {
+    const raw = e.target.value.replace(/\D/g, "").slice(0, 16);
+    const formatted = raw.replace(/(.{4})/g, "$1 ").trim();
+    setCardNumber(formatted);
+  };
+
+  const handleExpiryChange = (e) => {
+    const raw = e.target.value.replace(/\D/g, "").slice(0, 4);
+    if (raw.length >= 2) {
+      setCardExpiry(`${raw.slice(0, 2)}/${raw.slice(2)}`);
+    } else {
+      setCardExpiry(raw);
+    }
+  };
+
+  const handleCvvChange = (e) => {
+    const raw = e.target.value.replace(/\D/g, "").slice(0, 4);
+    setCardCvv(raw);
+  };
+
   return (
     <div className="payment-layout">
       <aside className="payment-summary">
-        <div className="summary-card">
-          <div className="aside-title">
-            <ReceiptText />
-            <h3>סיכום הזמנה סופי</h3>
+        {/* App-identical Summary Card */}
+        <div className="app-summary-card">
+          <div className="app-summary-header">
+            <div className="app-summary-check-wrap">
+              <Check size={16} />
+            </div>
+            <h3>סיכום הזמנה</h3>
           </div>
-          <span className="approved-dot">● מוכן לאישור</span>
-          <div className="summary-row">
-            <small>מיקום</small>
-            <strong>{booking.pickupAddress}</strong>
+
+          <div className="app-summary-route">
+            <div className="app-summary-place" title={booking.pickupAddress}>
+              <MapPin size={17} className="app-summary-pin" />
+              <span>{booking.pickupAddress || "נקודת איסוף"}</span>
+            </div>
+            <ArrowLeft size={18} className="app-summary-arrow" />
+            <div className="app-summary-place" title={booking.dropoffAddress}>
+              <MapPin size={17} className="app-summary-pin" />
+              <span>{booking.dropoffAddress || "נקודת יעד"}</span>
+            </div>
           </div>
-          <div className="summary-row">
-            <small>רכב</small>
-            <strong>
-              {booking.vehicleType === "car"
-                ? `${booking.make} ${booking.model}`
-                : `${VEHICLE_TYPES.find((item) => item.id === booking.vehicleType)?.label || ""} ${booking.weightBand ? `(${booking.weightBand} טון)` : ""}`}
-            </strong>
-          </div>
-          <div className="summary-row">
-            <small>בעיה</small>
-            <strong>
-              {ISSUES.find((item) => item.id === booking.issue)?.label}
-            </strong>
-          </div>
-          <div className="summary-row">
-            <small>גרריסט</small>
-            <strong>ישובץ לאחר אישור ההזמנה</strong>
-          </div>
-          <div className="summary-row">
-            <small>משך נסיעה משוער</small>
-            <strong>כ־{estimate.durationMinutes || 15} דקות</strong>
-          </div>
-          <div className="price-breakdown">
+
+          <div className="app-summary-meta">
             <span>
-              שירות גרירה <b>₪{estimate.towingFee || 0}</b>
+              <Clock3 size={15} /> כ־{estimate.durationMinutes || 15} דק׳
             </span>
             <span>
-              מע״מ 18% <b>₪{estimate.vat || 0}</b>
+              <Navigation size={15} /> {estimate.distanceKm ? `${estimate.distanceKm} ק"מ` : "מסלול ישיר"}
             </span>
-            <strong>
-              סה״כ לתשלום <em>₪{estimate.total || 0}</em>
+          </div>
+
+          <div className="app-summary-divider" />
+
+          <div className="app-summary-price-rows">
+            <div className="app-summary-price-row">
+              <span>שירות גרירה</span>
+              <strong dir="ltr">{estimate.towingFee ? `${estimate.towingFee} ₪` : `${estimate.total || 0} ₪`}</strong>
+            </div>
+            <div className="app-summary-price-row">
+              <span>מע״מ 17%</span>
+              <strong dir="ltr">{estimate.vat ? `${estimate.vat} ₪` : "0 ₪"}</strong>
+            </div>
+          </div>
+
+          <div className="app-summary-divider" />
+
+          <div className="app-summary-total-row">
+            <span>סה״כ לתשלום</span>
+            <strong className="app-summary-total-amount" dir="ltr">
+              {estimate.total ? `${estimate.total} ₪` : "0 ₪"}
             </strong>
           </div>
         </div>
+
+        {/* Security / Guarantee Card */}
         <div className="security-card">
           <h3>אישור הזמנה מאובטח</h3>
           <span>
             <LockKeyhole /> פרטי ההזמנה נשלחים בחיבור SSL
           </span>
           <span>
-            <ShieldCheck /> המחיר מחושב בשרת TOW ME
+            <ShieldCheck /> המחיר מחושב ומאושר בשרת TOW ME
           </span>
           <span>
             <TimerReset /> ביטול חינם תוך 5 דקות
@@ -1223,6 +1274,7 @@ function PaymentStep({
         <TrustStrip />
         <img className="aside-rescue" src={rescueVehicle} alt="שירות גרירה" />
       </aside>
+
       <form
         className="payment-form"
         onSubmit={(event) => {
@@ -1232,84 +1284,177 @@ function PaymentStep({
       >
         <header className="booking-card-title">
           <span>
-            <LockKeyhole />
+            <CreditCard />
           </span>
           <div>
-            <h1>אישור הזמנה</h1>
-            <p>אשר את הפרטים כדי לשלוח את הקריאה לגרריסטים זמינים</p>
+            <h1>תשלום</h1>
+            <p>השלמת פרטי התשלום להזמנה</p>
           </div>
         </header>
+
+        {/* Section: Payment Method */}
         <div className="payment-section">
           <h3>
             <CreditCard /> שיטת תשלום
           </h3>
-          <div className="payment-methods">
-            {[
-              { id: "cash", label: "תשלום לנהג", icon: CircleDollarSign, available: true },
-              { id: "card", label: "כרטיס — בקרוב", icon: CreditCard, available: false },
-              { id: "wallet", label: "ארנק דיגיטלי — בקרוב", icon: WalletCards, available: false },
-            ].map(({ id, label, icon: Icon, available }) => (
-              <button
-                className={booking.paymentMethod === id ? "selected" : ""}
-                type="button"
-                disabled={!available}
-                onClick={() => setBooking({ ...booking, paymentMethod: id })}
-                key={id}
-              >
-                <Icon />
-                <strong>{label}</strong>
-                {booking.paymentMethod === id && <CheckCircle2 />}
-              </button>
-            ))}
+          <div className="app-methods-grid">
+            {/* 0: Apple Pay */}
+            <button
+              type="button"
+              className={`app-method-card ${method === 0 ? "is-selected" : ""}`}
+              onClick={() => handleSelectMethod(0)}
+            >
+              <div className="app-apple-pay-label">
+                <img src={payAppleIcon} alt="Apple" />
+                <span>Pay</span>
+              </div>
+              {method === 0 && <CheckCircle2 className="app-method-check" />}
+            </button>
+
+            {/* 1: Bit */}
+            <button
+              type="button"
+              className={`app-method-card ${method === 1 ? "is-selected" : ""}`}
+              onClick={() => handleSelectMethod(1)}
+            >
+              <span className="app-bit-label">bit</span>
+              {method === 1 && <CheckCircle2 className="app-method-check" />}
+            </button>
+
+            {/* 2: Credit Card */}
+            <button
+              type="button"
+              className={`app-method-card ${method === 2 ? "is-selected" : ""}`}
+              onClick={() => handleSelectMethod(2)}
+            >
+              <div className="app-card-label">
+                <img src={payCardIcon} alt="Card" />
+                <span>כרטיס אשראי</span>
+              </div>
+              {method === 2 && <CheckCircle2 className="app-method-check" />}
+            </button>
           </div>
-          <p className="helper-text">התשלום מתבצע ישירות מול הנהג לאחר קבלת השירות.</p>
         </div>
+
+        {/* Section: Customer Details */}
         <div className="payment-section">
           <h3>
-            <Phone /> פרטי יצירת קשר עם הנהג
+            <UserRound /> פרטי הלקוח
           </h3>
-          <label>
-            שם המזמין
-            <input
-              value={booking.contactName}
-              onChange={(event) =>
-                setBooking({ ...booking, contactName: event.target.value })
-              }
-              placeholder="שם מלא"
-              required
-            />
-          </label>
-          <label>
-            מספר טלפון
-            <input
-              value={booking.contactPhone}
-              onChange={(event) =>
-                setBooking({ ...booking, contactPhone: event.target.value })
-              }
-              placeholder="05X-XXX-XXXX"
-              required
-            />
-          </label>
-          <label className="check-row">
-            <input
-              type="checkbox"
-              checked={booking.smsUpdates}
-              onChange={(event) =>
-                setBooking({ ...booking, smsUpdates: event.target.checked })
-              }
-            />
-            <span>שלח לי עדכונים ב-SMS על מיקום הגרריסט</span>
-          </label>
+          <div className="app-field-group">
+            <div className="app-input-field">
+              <img src={payPersonIcon} alt="" className="app-input-icon-img" />
+              <input
+                value={booking.contactName}
+                onChange={(e) =>
+                  setBooking({ ...booking, contactName: e.target.value })
+                }
+                placeholder="שם מלא"
+                required
+              />
+            </div>
+
+            <div className="app-input-field">
+              <Phone size={19} className="app-input-icon-svg" />
+              <input
+                type="tel"
+                dir="ltr"
+                value={booking.contactPhone}
+                onChange={(e) =>
+                  setBooking({ ...booking, contactPhone: e.target.value })
+                }
+                placeholder="05X-XXX-XXXX"
+                required
+              />
+            </div>
+          </div>
         </div>
-        <label className="terms-row">
-          <input type="checkbox" required /> אני מסכים/ה לתנאי השירות ולמדיניות
-          הפרטיות של TOW ME
+
+        {/* Section: Card Details (Active when method === 2) */}
+        {method === 2 && (
+          <div className="payment-section">
+            <h3>
+              <CreditCard /> פרטי כרטיס
+            </h3>
+            <div className="app-field-group">
+              <div className="app-input-field is-active">
+                <CreditCard size={19} className="app-input-icon-svg text-muted" />
+                <input
+                  dir="ltr"
+                  value={cardNumber}
+                  onChange={handleCardNumberChange}
+                  placeholder="XXXX XXXX XXXX XXXX"
+                  maxLength={19}
+                  required={method === 2}
+                />
+              </div>
+
+              <div className="app-input-row">
+                <div className="app-input-field">
+                  <img src={payLockIcon} alt="" className="app-input-icon-img" />
+                  <input
+                    dir="ltr"
+                    value={cardCvv}
+                    onChange={handleCvvChange}
+                    placeholder="CVV"
+                    maxLength={4}
+                    required={method === 2}
+                  />
+                </div>
+                <div className="app-input-field">
+                  <Clock3 size={18} className="app-input-icon-svg text-muted" />
+                  <input
+                    dir="ltr"
+                    value={cardExpiry}
+                    onChange={handleExpiryChange}
+                    placeholder="MM/YY"
+                    maxLength={5}
+                    required={method === 2}
+                  />
+                </div>
+              </div>
+
+              <div className="app-input-field">
+                <img src={payPersonIcon} alt="" className="app-input-icon-img" />
+                <input
+                  value={cardHolder}
+                  onChange={(e) => setCardHolder(e.target.value)}
+                  placeholder="שם בעל הכרטיס"
+                  required={method === 2}
+                />
+              </div>
+            </div>
+
+            <label className="app-save-card-row">
+              <input
+                type="checkbox"
+                checked={saveCard}
+                onChange={(e) => setSaveCard(e.target.checked)}
+              />
+              <span>שמור כרטיס לתשלומים עתידיים</span>
+            </label>
+          </div>
+        )}
+
+        {/* SMS updates checkbox */}
+        <label className="app-check-row">
+          <input
+            type="checkbox"
+            checked={booking.smsUpdates}
+            onChange={(e) =>
+              setBooking({ ...booking, smsUpdates: e.target.checked })
+            }
+          />
+          <span>שלח לי עדכונים ב-SMS על מיקום הגרריסט</span>
         </label>
+
         {error && (
           <div className="form-error">
             <AlertTriangle /> {error}
           </div>
         )}
+
+        {/* Actions */}
         <div className="form-actions">
           <button className="secondary-button" type="button" onClick={onBack}>
             <ArrowRight /> חזרה
@@ -1321,14 +1466,17 @@ function PaymentStep({
           >
             <Check />{" "}
             {submitting
-              ? "מאשר הזמנה..."
-              : `שלח הזמנה — ₪${estimate.total || 0}`}{" "}
+              ? "מבצע הזמנה..."
+              : `לתשלום ₪${estimate.total || 0}`}{" "}
             <ArrowLeft />
           </button>
         </div>
-        <small className="payment-privacy">
-          <LockKeyhole /> לא נאספים באתר פרטי כרטיס אשראי
-        </small>
+
+        {/* Security SSL footer */}
+        <div className="app-secure-footer">
+          <img src={payLockIcon} alt="" />
+          <span>תשלום מאובטח SSL</span>
+        </div>
       </form>
     </div>
   );

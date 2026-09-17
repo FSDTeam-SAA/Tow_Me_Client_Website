@@ -232,27 +232,72 @@
 .payment-layout, .tracking-layout { direction: ltr; }
 .payment-layout > *, .tracking-layout > * { direction: rtl; }
 .payment-summary { display: flex; flex-direction: column; gap: 15px; }
-.approved-dot { color: var(--green); font-size: .75rem; font-weight: 800; }
-.price-breakdown { margin-top: 13px; padding: 15px; border: 1px dashed #dfe5ec; border-radius: 12px; }
-.price-breakdown > span, .price-breakdown > strong { display: flex; justify-content: space-between; padding: 4px 0; font-size: .78rem; }
-.price-breakdown > strong { margin-top: 7px; padding-top: 10px; border-top: 1px solid #e5e9ef; font-size: .95rem; }
-.price-breakdown em { color: var(--orange); font-size: 1.5rem; font-style: normal; }
+
+/* App-identical Summary Card */
+.app-summary-card { padding: 22px 18px; border-radius: 20px; background: linear-gradient(180deg, #1898b8 0%, #101f3b 100%); color: white; box-shadow: 0 14px 32px rgba(16, 31, 59, 0.32); }
+.app-summary-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.app-summary-check-wrap { width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,0.7); background: rgba(255,255,255,0.15); display: grid; place-items: center; color: white; }
+.app-summary-header h3 { margin: 0; font-size: 1.05rem; font-weight: 700; color: white; }
+.app-summary-route { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 12px 0; }
+.app-summary-place { display: flex; align-items: center; gap: 5px; max-width: 44%; font-size: .88rem; font-weight: 700; color: white; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.app-summary-pin { color: var(--orange); flex: 0 0 auto; }
+.app-summary-arrow { color: rgba(255,255,255,0.7); flex: 0 0 auto; }
+.app-summary-meta { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 10px 0 14px; font-size: .78rem; color: rgba(255,255,255,0.75); }
+.app-summary-meta span { display: flex; align-items: center; gap: 5px; }
+.app-summary-divider { height: 1px; background: rgba(255,255,255,0.2); margin: 12px 0; }
+.app-summary-price-rows { display: flex; flex-direction: column; gap: 8px; font-size: .85rem; color: rgba(255,255,255,0.85); }
+.app-summary-price-row { display: flex; justify-content: space-between; align-items: center; }
+.app-summary-price-row strong { font-weight: 700; color: white; }
+.app-summary-total-row { display: flex; justify-content: space-between; align-items: center; padding-top: 4px; }
+.app-summary-total-row span { font-size: 1.05rem; font-weight: 700; color: white; }
+.app-summary-total-amount { font-size: 1.6rem; font-weight: 800; color: var(--orange); }
+
 .security-card h3 { margin: 0 0 13px; }
 .security-card span { display: flex; align-items: center; gap: 8px; padding: 8px 10px; margin-top: 6px; border-radius: 8px; color: #517089; background: #eef8ff; font-size: .75rem; font-weight: 700; }
 .security-card span:first-of-type { color: #24885b; background: #edfbf3; }
 .security-card span:last-of-type { color: #bf633d; background: #fff3ee; }
 .security-card svg { width: 17px; }
-.payment-section { padding: 26px 0; border-bottom: 1px solid var(--line); }
-.payment-methods { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
-.payment-methods button { position: relative; min-height: 88px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; color: var(--navy); background: white; border: 1px solid #dfe4eb; border-radius: 12px; }
-.payment-methods button > svg:first-child { color: var(--teal); }
-.payment-methods button > svg:last-child { position: absolute; top: 8px; right: 8px; width: 17px; color: var(--orange); }
-.credit-card-preview { position: relative; width: 340px; max-width: 100%; height: 185px; margin: 26px auto; padding: 24px; display: grid; grid-template-columns: 1fr 40px; grid-template-rows: auto 1fr auto; color: white; background: linear-gradient(145deg,#17294c,#263e70); border-radius: 17px; box-shadow: 0 17px 30px rgba(25,45,80,.25); direction: ltr; }
-.credit-card-preview > span { font-weight: 900; }.credit-card-preview > svg { color: #ff9a6e; }.credit-card-preview > b { grid-column: 1/-1; align-self: center; letter-spacing: 3px; font-size: 1.18rem; }.credit-card-preview > small { grid-column: 1/-1; opacity: .75; }
-.check-row, .terms-row { min-height: 45px; padding: 10px 12px; display: flex !important; align-items: center; gap: 9px; background: #eef6ff; border-radius: 9px; }
-.check-row input, .terms-row input { width: 18px; min-height: 18px; accent-color: var(--teal); }
-.terms-row { margin-top: 20px !important; background: #fafbfd; border: 1px solid #e6eaf0; }
-.primary-button--pay { background: linear-gradient(135deg,var(--teal),#1f80b4); box-shadow: 0 10px 25px rgba(22,153,185,.3); }
+
+.payment-section { padding: 22px 0; border-bottom: 1px solid var(--line); }
+.payment-section h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; font-size: 1.08rem; font-weight: 800; color: var(--navy); }
+
+/* Payment Methods (Apple Pay, Bit, Card) */
+.app-methods-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.app-method-card { position: relative; min-height: 62px; display: flex; align-items: center; justify-content: center; background: white; border: 1px solid #dfe5ec; border-radius: 14px; cursor: pointer; padding: 8px; transition: all .16s ease; }
+.app-method-card:hover { border-color: #ffaa85; }
+.app-method-card.is-selected { background: #fff3ee; border-color: var(--orange); border-width: 1.6px; }
+.app-method-check { position: absolute; top: 6px; right: 6px; width: 15px; height: 15px; color: var(--orange); }
+
+.app-apple-pay-label { display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 1rem; font-weight: 700; color: var(--navy); }
+.app-apple-pay-label img { height: 21px; width: auto; object-fit: contain; }
+
+.app-bit-label { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; color: #2a2e43; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1; }
+
+.app-card-label { display: flex; align-items: center; justify-content: center; gap: 5px; font-size: .84rem; font-weight: 600; color: var(--navy); }
+.app-card-label img { height: 18px; width: auto; object-fit: contain; }
+
+/* Fields matching Flutter app _InputField */
+.app-field-group { display: flex; flex-direction: column; gap: 10px; }
+.app-input-field { height: 54px; display: flex; align-items: center; padding: 0 14px; gap: 10px; background: #f8fafc; border: 1px solid #dfe5ec; border-radius: 14px; transition: all .15s ease; }
+.app-input-field:focus-within, .app-input-field.is-active { background: white; border-color: var(--orange); border-width: 1.5px; box-shadow: 0 0 0 3px rgba(255,102,50,.1); }
+.app-input-field input { flex: 1; min-width: 0; height: 100%; border: none; outline: none; background: transparent; font-size: .94rem; font-weight: 600; color: var(--navy); font-family: inherit; }
+.app-input-field input::placeholder { color: #9aa5b5; font-weight: 500; }
+.app-input-icon-img { width: 22px; height: 22px; object-fit: contain; flex: 0 0 auto; }
+.app-input-icon-svg { color: #8c9ba8; flex: 0 0 auto; }
+.app-input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.app-save-card-row { display: flex; align-items: center; gap: 10px; margin-top: 14px; cursor: pointer; font-size: .88rem; font-weight: 600; color: #43546a; }
+.app-save-card-row input[type="checkbox"] { width: 19px; height: 19px; accent-color: var(--orange); cursor: pointer; }
+
+.app-check-row { display: flex; align-items: center; gap: 10px; margin-top: 16px; padding: 11px 14px; background: #f0f7ff; border-radius: 11px; font-size: .84rem; font-weight: 600; color: var(--navy); cursor: pointer; }
+.app-check-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--teal); cursor: pointer; }
+
+.primary-button--pay { background: linear-gradient(135deg, var(--orange), #ff7848); box-shadow: 0 9px 22px rgba(255,102,50,.28); min-height: 52px; font-size: 1.05rem; }
+.primary-button--pay:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(255,102,50,.35); }
+
+.app-secure-footer { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 18px; font-size: .8rem; font-weight: 600; color: #8a97a8; }
+.app-secure-footer img { width: 15px; height: 15px; object-fit: contain; opacity: .7; }
+
 .form-error { display: flex; align-items: center; gap: 8px; margin-top: 14px; padding: 11px 13px; color: #b33720; background: #fff0eb; border-radius: 9px; font-size: .83rem; font-weight: 700; }
 .form-error svg { flex: 0 0 auto; width: 18px; }
 
