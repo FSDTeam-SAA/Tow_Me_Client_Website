@@ -566,10 +566,10 @@
   .ref-content-shell { width: calc(100% - 24px); }
   .ref-hero { padding: 42px 0 55px; border-radius: 0; }
   .ref-hero-grid { width: calc(100% - 24px); padding: 0 12px; gap: 26px; }
-  .ref-hero-copy h1 { font-size: 3.2rem; letter-spacing: -1.5px; }
+  .ref-hero-copy h1 { font-size: clamp(2.2rem, 9vw, 3.2rem); letter-spacing: -1.5px; overflow-wrap: anywhere; }
   .ref-hero-copy p { margin: 16px 0; font-size: .95rem; }
   .ref-badges span { font-size: .64rem; padding-inline: 8px; }
-  .ref-booking { min-height: 0; padding: 22px 18px; border-radius: 15px; }
+  .ref-booking { width: 100%; max-width: 100%; min-height: 0; padding: 22px 18px; border-radius: 15px; box-sizing: border-box; }
   .ref-booking-title { margin-bottom: 16px; }
   .ref-booking-title strong { font-size: 1.2rem; }
   .ref-how { padding: 75px 0 85px; }

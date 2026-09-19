@@ -18,8 +18,10 @@ import {
   LockKeyhole,
   Mail,
   MapPin,
+  Maximize2,
   Menu,
   MessageCircle,
+  Motorbike,
   Navigation,
   Phone,
   ReceiptText,
@@ -49,6 +51,8 @@ import { api, clearSession, getStoredSession } from "./api";
 import ReferenceHomePage from "./components/ReferenceHomePage";
 import BookingMap from "./components/BookingMap/BookingMap";
 import LocationSearchInput from "./components/LocationSearchInput/LocationSearchInput";
+import MapModal from "./components/MapModal/MapModal";
+import { getGoogleDrivingRoute } from "./services/googleMapsService";
 import "./App.css";
 
 const STEPS = [
@@ -67,6 +71,12 @@ const ISSUES = [
   },
   { id: "accident", label: "תאונה", hint: "הרכב ניזוק", icon: Car },
   {
+    id: "extraction",
+    label: "חילוץ",
+    hint: "רכב תקוע / חילוץ שטח",
+    icon: AlertTriangle,
+  },
+  {
     id: "battery",
     label: "בעיית חשמל / סוללה",
     hint: "סוללה מרוקנת",
@@ -79,7 +89,7 @@ const VEHICLE_TYPES = [
     id: "motorcycle",
     label: "אופנוע",
     hint: "אופנוע / קטנוע",
-    icon: Navigation,
+    icon: Motorbike,
   },
   { id: "truck", label: "משאית / רכב כבד", hint: "2.6–60 טון", icon: Truck },
   {
@@ -383,7 +393,7 @@ function HeroBookingCard({ onStart }) {
         <ChevronDown size={16} />
       </div>
       <div className="quick-issues">
-        {ISSUES.slice(0, 3).map(({ id, label, icon: Icon }) => (
+        {ISSUES.slice(0, 4).map(({ id, label, icon: Icon }) => (
           <button
             type="button"
             className={issue === id ? "active" : ""}
@@ -652,12 +662,24 @@ function TrustStrip() {
   );
 }
 
-function EstimateCard({ booking, activeStep, estimate, onMapSelect }) {
+function EstimateCard({ booking, activeStep, estimate, onMapSelect, onOpenMap }) {
   const issue = ISSUES.find((item) => item.id === booking.issue);
   return (
     <aside className="booking-aside">
       {activeStep === 1 && (
-        <BookingMap booking={booking} onSelect={onMapSelect} />
+        <div className="aside-map-wrapper">
+          <BookingMap booking={booking} onSelect={onMapSelect} />
+          {onOpenMap && (
+            <button
+              type="button"
+              className="aside-map-bar-btn"
+              onClick={onOpenMap}
+              title="פתח מפה מוגדלת לבחירת מיקום"
+            >
+              <Maximize2 size={15} /> פתח מפה מוגדלת
+            </button>
+          )}
+        </div>
       )}
       <div className="summary-card">
         <div className="aside-title">
@@ -729,6 +751,7 @@ function LocationStep({
   onNext,
   locating,
   onLocate,
+  onOpenMap,
   error,
 }) {
   return (
@@ -754,10 +777,19 @@ function LocationStep({
           onSelect={(place) => onPlaceSelect("pickup", place)}
           placeholder="הכנס כתובת או לחץ לזיהוי אוטומטי"
         />
-        <button className="location-button" type="button" onClick={onLocate}>
-          <MapPin size={17} />{" "}
-          {locating ? "מזהה מיקום..." : "זהה מיקום אוטומטית"}
-        </button>
+        <div className="location-action-row">
+          <button className="location-button" type="button" onClick={onLocate}>
+            <LocateFixed size={16} />{" "}
+            {locating ? "מזהה מיקום..." : "זהה מיקום אוטומטית"}
+          </button>
+          <button
+            className="map-modal-trigger"
+            type="button"
+            onClick={onOpenMap}
+          >
+            <MapPin size={16} /> בחר מיקום במפה
+          </button>
+        </div>
         <label>יעד *</label>
         <LocationSearchInput
           kind="dropoff"
@@ -1832,6 +1864,7 @@ export default function App() {
   const [estimate, setEstimate] = useState({ total: 0, durationMinutes: 15 });
   const [session, setSession] = useState(() => getStoredSession());
   const [authOpen, setAuthOpen] = useState(false);
+  const [mapModalOpen, setMapModalOpen] = useState(false);
   const [pendingCheckout, setPendingCheckout] = useState(false);
   const [trip, setTrip] = useState(null);
   const [tracking, setTracking] = useState(null);
@@ -2013,22 +2046,81 @@ export default function App() {
       { enableHighAccuracy: true, timeout: 8000 },
     );
   };
+  useEffect(() => {
+    let active = true;
+    if (
+      Number.isFinite(booking.pickupLat) &&
+      Number.isFinite(booking.pickupLng) &&
+      Number.isFinite(booking.dropoffLat) &&
+      Number.isFinite(booking.dropoffLng)
+    ) {
+      getGoogleDrivingRoute(
+        { lat: booking.pickupLat, lng: booking.pickupLng },
+        { lat: booking.dropoffLat, lng: booking.dropoffLng }
+      ).then((res) => {
+        if (active && res?.distanceKm) {
+          setEstimate((prev) => ({
+            ...prev,
+            distanceKm: res.distanceKm,
+            durationMinutes: res.durationMinutes || prev.durationMinutes,
+          }));
+        }
+      });
+    }
+    return () => {
+      active = false;
+    };
+  }, [booking.pickupLat, booking.pickupLng, booking.dropoffLat, booking.dropoffLng]);
+
   const tryEstimate = async () => {
     setEstimating(true);
     setError("");
     try {
+      let drivingDist = null;
+      let drivingDuration = null;
+      if (
+        Number.isFinite(booking.pickupLat) &&
+        Number.isFinite(booking.pickupLng) &&
+        Number.isFinite(booking.dropoffLat) &&
+        Number.isFinite(booking.dropoffLng)
+      ) {
+        try {
+          const route = await getGoogleDrivingRoute(
+            { lat: booking.pickupLat, lng: booking.pickupLng },
+            { lat: booking.dropoffLat, lng: booking.dropoffLng }
+          );
+          if (route?.distanceKm) {
+            drivingDist = route.distanceKm;
+            drivingDuration = route.durationMinutes;
+          }
+        } catch (routeErr) {
+          console.warn("[App] Driving route calc error:", routeErr);
+        }
+      }
+
+      const isRescue = booking.issue === "extraction" || booking.issue === "accident";
+      const tripType = booking.issue === "extraction" ? "rescue" : (booking.issue === "accident" ? "roadside" : "towing");
+
       const data = await api.estimateTrip({
         pickupLat: booking.pickupLat,
         pickupLng: booking.pickupLng,
         dropoffLat: booking.dropoffLat,
         dropoffLng: booking.dropoffLng,
-        tripType: booking.issue === "accident" ? "roadside" : "towing",
-        includeRescue: booking.issue === "accident",
+        distanceKm: drivingDist || undefined,
+        tripType,
+        includeRescue: isRescue,
+        notes: isRescue ? "חילוץ" : undefined,
         vehicleType: booking.vehicleType,
         weightBand: booking.weightBand || undefined,
       });
-      setEstimate(data);
-      return data;
+
+      const finalEstimate = {
+        ...data,
+        distanceKm: drivingDist || data.distanceKm,
+        durationMinutes: drivingDuration || data.durationMinutes,
+      };
+      setEstimate(finalEstimate);
+      return finalEstimate;
     } catch (err) {
       setError(err.message);
       return null;
@@ -2045,14 +2137,18 @@ export default function App() {
     setSubmitting(true);
     setError("");
     try {
+      const isRescue = booking.issue === "extraction" || booking.issue === "accident";
+      const tripType = booking.issue === "extraction" ? "rescue" : (booking.issue === "accident" ? "roadside" : "towing");
+
       const created = await api.createTrip({
-        tripType: booking.issue === "accident" ? "roadside" : "towing",
+        tripType,
         pickupAddress: booking.pickupAddress,
         pickupLat: booking.pickupLat,
         pickupLng: booking.pickupLng,
         dropoffAddress: booking.dropoffAddress,
         dropoffLat: booking.dropoffLat,
         dropoffLng: booking.dropoffLng,
+        distanceKm: estimate.distanceKm || undefined,
         vehicleInfo: {
           type: booking.vehicleType,
           weightBand: booking.weightBand || undefined,
@@ -2069,12 +2165,13 @@ export default function App() {
         notes: [
           booking.issueDetails,
           booking.vehicleNotes,
+          isRescue ? "חילוץ רכב תקוע" : "",
           `vehicleState:${booking.vehicleState}`,
         ]
           .filter(Boolean)
           .join(" | "),
         estimatedDuration: estimate.durationMinutes,
-        includeRescue: booking.issue === "accident",
+        includeRescue: isRescue,
       });
       setTrip(created);
       setScreen("tracking");
@@ -2149,6 +2246,7 @@ export default function App() {
                     onPlaceSelect={selectPlace}
                     locating={locating}
                     onLocate={detectLocation}
+                    onOpenMap={() => setMapModalOpen(true)}
                     error={error}
                     onNext={(event) => {
                       event.preventDefault();
@@ -2170,6 +2268,7 @@ export default function App() {
                     activeStep={1}
                     estimate={estimate}
                     onMapSelect={selectMapLocation}
+                    onOpenMap={() => setMapModalOpen(true)}
                   />
                 </>
               )}
@@ -2237,6 +2336,13 @@ export default function App() {
           setPendingCheckout(false);
         }}
         onSuccess={handleAuthSuccess}
+      />
+      <MapModal
+        open={mapModalOpen}
+        onClose={() => setMapModalOpen(false)}
+        booking={booking}
+        onMapSelect={selectMapLocation}
+        estimate={estimate}
       />
     </div>
   );

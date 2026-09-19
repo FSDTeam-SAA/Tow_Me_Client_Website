@@ -128,6 +128,7 @@ export default function HeroSection({ onSearchTow }) {
                   <option value="tire">🔧 תקר (פנצ'ר)</option>
                   <option value="accident">🚗 תאונה</option>
                   <option value="engine">⚙️ תקלת מנוע</option>
+                  <option value="extraction">🛟 חילוץ רכב / שטח</option>
                   <option value="other">❓ אחר</option>
                 </select>
               </div>

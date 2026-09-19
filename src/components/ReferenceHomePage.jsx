@@ -14,6 +14,7 @@ const issueOptions = [
   { id: 'breakdown', label: 'הרכב לא מניע', icon: AlertTriangle },
   { id: 'tire', label: 'תקר', icon: Car },
   { id: 'accident', label: 'תאונה', icon: Truck },
+  { id: 'extraction', label: 'חילוץ', icon: ShieldCheck },
   { id: 'other', label: 'אחר', icon: Navigation },
 ]
 
