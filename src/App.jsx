@@ -717,6 +717,22 @@ function EstimateCard({ booking, activeStep, estimate, onMapSelect, onOpenMap })
           </span>
           <em>מהיר</em>
         </div>
+        {estimate.towingFee > 0 && (
+          <>
+            <div className="summary-row">
+              <small>שירות גרירה</small>
+              <strong dir="ltr">{estimate.towingFee} ₪</strong>
+            </div>
+            <div className="summary-row">
+              <small>עמלת שירות</small>
+              <strong dir="ltr">{estimate.serviceFee || 0} ₪</strong>
+            </div>
+            <div className="summary-row">
+              <small>מע״מ {estimate.vatPercent ?? 18}%</small>
+              <strong dir="ltr">{estimate.vat || 0} ₪</strong>
+            </div>
+          </>
+        )}
         <div className="summary-row">
           <small>מחיר משוער</small>
           <strong className="orange-text">₪{estimate.total || 0}</strong>
@@ -746,6 +762,7 @@ function EstimateCard({ booking, activeStep, estimate, onMapSelect, onOpenMap })
 
 function LocationStep({
   booking,
+  setBooking,
   onAddressChange,
   onPlaceSelect,
   onNext,
@@ -1275,7 +1292,11 @@ function PaymentStep({
               <strong dir="ltr">{estimate.towingFee ? `${estimate.towingFee} ₪` : `${estimate.total || 0} ₪`}</strong>
             </div>
             <div className="app-summary-price-row">
-              <span>מע״מ 17%</span>
+              <span>עמלת שירות</span>
+              <strong dir="ltr">{`${estimate.serviceFee || 0} ₪`}</strong>
+            </div>
+            <div className="app-summary-price-row">
+              <span>מע״מ {estimate.vatPercent ?? 18}%</span>
               <strong dir="ltr">{estimate.vat ? `${estimate.vat} ₪` : "0 ₪"}</strong>
             </div>
           </div>
@@ -1592,6 +1613,30 @@ function TrackingScreen({
                   : "ממתין לשיבוץ"}
               </strong>
             </div>
+            {(trip?.priceBreakdown?.towingFee ?? estimate.towingFee) > 0 && (
+              <>
+                <div className="summary-row">
+                  <small>שירות גרירה</small>
+                  <strong dir="ltr">
+                    {trip?.priceBreakdown?.towingFee ?? estimate.towingFee} ₪
+                  </strong>
+                </div>
+                <div className="summary-row">
+                  <small>עמלת שירות</small>
+                  <strong dir="ltr">
+                    {trip?.priceBreakdown?.serviceFee ?? estimate.serviceFee ?? 0} ₪
+                  </strong>
+                </div>
+                <div className="summary-row">
+                  <small>
+                    מע״מ {trip?.priceBreakdown?.vatPercent ?? estimate.vatPercent ?? 18}%
+                  </small>
+                  <strong dir="ltr">
+                    {trip?.priceBreakdown?.vat ?? estimate.vat ?? 0} ₪
+                  </strong>
+                </div>
+              </>
+            )}
             <div className="summary-row">
               <small>סכום לתשלום לנהג</small>
               <strong className="green-text">
@@ -2242,6 +2287,7 @@ export default function App() {
                 <>
                   <LocationStep
                     booking={booking}
+                    setBooking={setBooking}
                     onAddressChange={changeAddress}
                     onPlaceSelect={selectPlace}
                     locating={locating}
