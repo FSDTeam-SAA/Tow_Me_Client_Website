@@ -62,6 +62,7 @@ const STEPS = [
   { id: 4, label: "תשלום" },
 ];
 const ISSUES = [
+  { id: "on_site", label: "קריאת שירות במקום", hint: "סיוע במקום ללא גרירה ליעד", icon: MapPin },
   { id: "breakdown", label: "תקלה במנוע", hint: "הרכב לא מתניע", icon: Zap },
   {
     id: "tire",
@@ -123,14 +124,42 @@ const DEFAULT_BOOKING = {
   contactName: "",
   contactPhone: "",
   smsUpdates: true,
+  termsAccepted: false,
 };
-const FALLBACK_MAKES = [
-  { id: 1, name: "Toyota" },
-  { id: 2, name: "Hyundai" },
-  { id: 3, name: "Kia" },
-  { id: 4, name: "Mazda" },
-  { id: 5, name: "Skoda" },
+// Client-provided Hebrew list. The second value matches the registry brand
+// where available; unmatched makes still allow a manually entered model.
+const HEBREW_MAKES = [
+  ['IM', 'IM'], ['אאודי', 'Audi'], ['אבארט', 'Abarth'],
+  ['אווטאר', 'Avatr'], ['אופל', 'Opel'], ['אורה', 'Ora'],
+  ['איווייז', 'Aiways'], ['איווקו', 'Iveco'], ['איון', 'Aion'],
+  ['אינפיניטי', 'Infiniti'], ['איסוזו', 'Isuzu'], ['אלפא רומאו', 'Alfa Romeo'],
+  ['אלפין', 'Alpine'], ["אם ג'י", 'MG'], ['אסטון מרטין', 'Aston Martin'],
+  ['אקספנג', 'Xpeng'], ['ב.מ.וו', 'BMW'], ['בי.וי.די', 'BYD'],
+  ['בנטלי', 'Bentley'], ["ג'אק", 'JAC'], ["ג'ילי", 'Geely'],
+  ["ג'יפ", 'Jeep'], ['ג\'נסיס', 'Genesis'], ['דאיון', 'Dayun'],
+  ["דאצ'יה", 'Dacia'], ["דודג'", 'Dodge'], ['דונגפנג', 'Dongfeng'],
+  ['די אס', 'DS'], ['דיפאל', 'Deepal'], ["הונגצ'י", 'Hongqi'],
+  ['הונדה', 'Honda'], ['וואי', 'Wey'], ['וויה', 'Voyah'], ['וולוו', 'Volvo'],
+  ['זיקר', 'Zeekr'], ['טויוטה', 'Toyota'], ['טסלה', 'Tesla'],
+  ['יגואר', 'Jaguar'], ['יונדאי', 'Hyundai'], ['לינק אנד קו', 'Lynk & Co'],
+  ['ליפמוטור', 'Leapmotor'], ['לנד רובר', 'Land Rover'], ['לקסוס', 'Lexus'],
+  ['מאזדה', 'Mazda'], ['מזראטי', 'Maserati'], ['מיני', 'Mini'],
+  ['מיצובישי', 'Mitsubishi'], ['מקסוס', 'Maxus'], ['מרצדס - בנץ', 'Mercedes-Benz'],
+  ['ניאו', 'Nio'], ['ניסאן', 'Nissan'], ['סאנגיונג', 'SsangYong'],
+  ['סובארו', 'Subaru'], ['סוזוקי', 'Suzuki'], ['סיאט', 'Seat'],
+  ['סיטרואן', 'Citroen'], ['סמארט', 'Smart'], ['סקודה', 'Skoda'],
+  ['סקייוול', 'Skywell'], ['סרס', 'Seres'], ['פולסטאר', 'Polestar'],
+  ['פולקסווגן', 'Volkswagen'], ['פורד', 'Ford'], ['פורשה', 'Porsche'],
+  ['פורטינג', 'Forthing'], ['פיאט', 'Fiat'], ["פיג'ו", 'Peugeot'],
+  ["צ'רי", 'Chery'], ['קאדילק', 'Cadillac'], ['קופרה', 'Cupra'],
+  ['קיה', 'Kia'], ['ראם', 'Ram'], ['רנו', 'Renault'],
+  ['שברולט', 'Chevrolet'], ['אחר', 'Other'],
 ];
+const hebrewMakesWithCodes = (registry) => HEBREW_MAKES.map(([name, canonical], index) => {
+  const match = registry.find((item) =>
+    item.name?.toLowerCase() === canonical.toLowerCase() || item.name === name);
+  return { id: match?.id ?? -(index + 1), name, canonical };
+});
 
 function Brand({ light = false, onClick }) {
   return (
@@ -290,6 +319,14 @@ function Footer({ onNavigateSection, onNavigateHome }) {
             <Clock3 size={14} /> 24/7 זמין
           </span>
         </div>
+      </div>
+      <div className="shell" id="terms" style={{ padding: '18px 0' }}>
+        <strong>תנאי שימוש</strong>
+        <p>בלחיצה על אישור ההזמנה הלקוח מסכים לתנאי השימוש. דמי ביטול: ללא חיוב בדקה הראשונה לאחר קבלת הקריאה בידי הנהג, 50 ₪ עד חמש דקות, 150 ₪ מחמש דקות ואילך. לאחר תחילת הנסיעה יחול המחיר המלא. הנוסח המלא יעודכן לאחר אישור משפטי.</p>
+      </div>
+      <div className="shell" id="privacy" style={{ padding: '0 0 18px' }}>
+        <strong>מדיניות פרטיות</strong>
+        <p>TOW ME משתמשת בפרטי קשר ובמיקום לצורך טיפול בבקשת השירות.</p>
       </div>
       <div className="shell footer-bottom">
         <span>כל הזכויות שמורות © {new Date().getFullYear()} TOW ME.</span>
@@ -807,14 +844,14 @@ function LocationStep({
             <MapPin size={16} /> בחר מיקום במפה
           </button>
         </div>
-        <label>יעד *</label>
-        <LocationSearchInput
+        <label>יעד {booking.issue === "on_site" ? "(לא נדרש לשירות במקום)" : "*"}</label>
+        {booking.issue !== "on_site" && <LocationSearchInput
           kind="dropoff"
           value={booking.dropoffAddress}
           onChange={(value) => onAddressChange("dropoff", value)}
           onSelect={(place) => onPlaceSelect("dropoff", place)}
           placeholder="לאן לגרור את הרכב?"
-        />
+        />}
       </div>
       <div className="form-section">
         <h3>
@@ -862,7 +899,7 @@ function LocationStep({
 }
 
 function VehicleStep({ booking, setBooking, onBack, onNext, estimating, error }) {
-  const [manufacturers, setManufacturers] = useState(FALLBACK_MAKES);
+  const [manufacturers, setManufacturers] = useState(() => hebrewMakesWithCodes([]));
   const [models, setModels] = useState([]);
   const [loadingMakes, setLoadingMakes] = useState(false);
   useEffect(() => {
@@ -871,7 +908,7 @@ function VehicleStep({ booking, setBooking, onBack, onNext, estimating, error })
     api
       .getManufacturers()
       .then((items) => {
-        if (active && items?.length) setManufacturers(items);
+        if (active && items?.length) setManufacturers(hebrewMakesWithCodes(items));
       })
       .catch(() => {})
       .finally(() => {
@@ -882,7 +919,7 @@ function VehicleStep({ booking, setBooking, onBack, onNext, estimating, error })
     };
   }, []);
   useEffect(() => {
-    if (!booking.makeId) {
+    if (!booking.makeId || Number(booking.makeId) < 0) {
       setModels([]);
       return undefined;
     }
@@ -1321,7 +1358,7 @@ function PaymentStep({
             <ShieldCheck /> המחיר מחושב ומאושר בשרת TOW ME
           </span>
           <span>
-            <TimerReset /> ביטול חינם תוך 5 דקות
+            <TimerReset /> ביטול חינם בדקה הראשונה; 50 ₪ עד 5 דקות, לאחר מכן 150 ₪
           </span>
         </div>
         <TrustStrip />
@@ -1500,6 +1537,13 @@ function PaymentStep({
           />
           <span>שלח לי עדכונים ב-SMS על מיקום הגרריסט</span>
         </label>
+        <label className="app-check-row">
+          <input type="checkbox" checked={booking.termsAccepted}
+            onChange={(e) => setBooking({ ...booking, termsAccepted: e.target.checked })} required />
+          <span>קראתי ואני מסכים/ה ל
+            <button type="button" onClick={() => window.alert('תנאי השימוש: בעת הזמנת שירות גרירה חלים תנאי הביטול המוצגים לפני אישור ההזמנה. הנוסח המלא יעודכן לאחר אישור משפטי.')}>תנאי השימוש</button>
+          </span>
+        </label>
 
         {error && (
           <div className="form-error">
@@ -1533,6 +1577,47 @@ function PaymentStep({
       </form>
     </div>
   );
+}
+
+function DestinationChangePanel({ trip, onChanged }) {
+  const [address, setAddress] = useState("");
+  const [place, setPlace] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  if (!trip || !["pending", "accepted", "arrived", "in_progress"].includes(trip.status)) return null;
+  const submit = async (event) => {
+    event.preventDefault();
+    if (!place || place.label !== address) {
+      setError("יש לבחור יעד מהרשימה.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      const destination = { dropoffAddress: place.label, dropoffLat: place.lat, dropoffLng: place.lng };
+      const quote = await api.quoteDestination(trip._id, destination);
+      if (!window.confirm(`המחיר המעודכן ליעד החדש הוא ₪${quote.price}. לאשר שינוי יעד?`)) return;
+      const updated = await api.changeDestination(trip._id, {
+        ...destination, expectedPrice: quote.price, confirmed: true,
+      });
+      onChanged(updated, destination);
+      setAddress("");
+      setPlace(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return <form className="booking-card" onSubmit={submit} style={{ maxWidth: 720, margin: "24px auto" }}>
+    <h2>שינוי יעד הגרירה</h2>
+    <p>המחיר החדש יחושב מנקודת האיסוף ויוצג לאישור לפני עדכון הנהג.</p>
+    <LocationSearchInput kind="dropoff" value={address} placeholder="בחר יעד חדש"
+      onChange={(value) => { setAddress(value); setPlace(null); }}
+      onSelect={(selected) => { setAddress(selected.label); setPlace(selected); }} />
+    {error && <p role="alert">{error}</p>}
+    <button className="primary-button" type="submit" disabled={busy}>{busy ? "מחשב מחיר..." : "בדוק מחיר ושנה יעד"}</button>
+  </form>;
 }
 
 function TrackingScreen({
@@ -1996,8 +2081,12 @@ export default function App() {
           if (active) setTracking(data);
         })
         .catch(() => {});
+    const refreshTrip = () => api.getTrip(trip._id).then((data) => {
+      if (active) setTrip(data);
+    }).catch(() => {});
     refresh();
-    const interval = window.setInterval(refresh, 15000);
+    refreshTrip();
+    const interval = window.setInterval(() => { refresh(); refreshTrip(); }, 15000);
     return () => {
       active = false;
       window.clearInterval(interval);
@@ -2144,13 +2233,13 @@ export default function App() {
       }
 
       const isRescue = booking.issue === "extraction" || booking.issue === "accident";
-      const tripType = booking.issue === "extraction" ? "rescue" : (booking.issue === "accident" ? "roadside" : "towing");
+      const tripType = booking.issue === "on_site" ? "on_site" : booking.issue === "extraction" ? "rescue" : (booking.issue === "accident" ? "roadside" : "towing");
 
       const data = await api.estimateTrip({
         pickupLat: booking.pickupLat,
         pickupLng: booking.pickupLng,
-        dropoffLat: booking.dropoffLat,
-        dropoffLng: booking.dropoffLng,
+        dropoffLat: booking.issue === "on_site" ? booking.pickupLat : booking.dropoffLat,
+        dropoffLng: booking.issue === "on_site" ? booking.pickupLng : booking.dropoffLng,
         distanceKm: drivingDist || undefined,
         tripType,
         includeRescue: isRescue,
@@ -2174,6 +2263,12 @@ export default function App() {
     }
   };
   const createBooking = async (contactOverride = {}) => {
+    const contactName = (contactOverride.name || booking.contactName || "").trim();
+    const contactPhone = (contactOverride.phoneNumber || booking.contactPhone || "").replace(/[\s()-]/g, "");
+    if (!contactName || !/^\+?\d{9,15}$/.test(contactPhone) || !booking.termsAccepted) {
+      setError("יש להזין שם, מספר טלפון נייד ולאשר את תנאי השימוש לפני ההזמנה.");
+      return;
+    }
     if (!getStoredSession().token) {
       setPendingCheckout(true);
       setAuthOpen(true);
@@ -2183,16 +2278,16 @@ export default function App() {
     setError("");
     try {
       const isRescue = booking.issue === "extraction" || booking.issue === "accident";
-      const tripType = booking.issue === "extraction" ? "rescue" : (booking.issue === "accident" ? "roadside" : "towing");
+      const tripType = booking.issue === "on_site" ? "on_site" : booking.issue === "extraction" ? "rescue" : (booking.issue === "accident" ? "roadside" : "towing");
 
       const created = await api.createTrip({
         tripType,
         pickupAddress: booking.pickupAddress,
         pickupLat: booking.pickupLat,
         pickupLng: booking.pickupLng,
-        dropoffAddress: booking.dropoffAddress,
-        dropoffLat: booking.dropoffLat,
-        dropoffLng: booking.dropoffLng,
+        dropoffAddress: booking.issue === "on_site" ? booking.pickupAddress : booking.dropoffAddress,
+        dropoffLat: booking.issue === "on_site" ? booking.pickupLat : booking.dropoffLat,
+        dropoffLng: booking.issue === "on_site" ? booking.pickupLng : booking.dropoffLng,
         distanceKm: estimate.distanceKm || undefined,
         vehicleInfo: {
           type: booking.vehicleType,
@@ -2207,6 +2302,8 @@ export default function App() {
         contactName: contactOverride.name || booking.contactName,
         contactPhone: contactOverride.phoneNumber || booking.contactPhone,
         smsUpdates: booking.smsUpdates,
+        bookingSource: "website",
+        termsAccepted: booking.termsAccepted,
         notes: [
           booking.issueDetails,
           booking.vehicleNotes,
@@ -2255,10 +2352,12 @@ export default function App() {
     setScreen("home");
   };
   const cancelTrip = async () => {
-    if (!trip?._id || !window.confirm("לבטל את ההזמנה?")) return;
+    if (!trip?._id) return;
     setCancelling(true);
     try {
-      await api.cancelTrip(trip._id);
+      const quote = await api.getCancellationQuote(trip._id);
+      if (!window.confirm(`לבטל את ההזמנה? דמי הביטול כעת: ₪${quote.fee}.`)) return;
+      await api.cancelTrip(trip._id, undefined, quote.fee);
       setScreen("home");
     } catch (err) {
       window.alert(err.message);
@@ -2299,8 +2398,8 @@ export default function App() {
                       if (
                         !Number.isFinite(booking.pickupLat) ||
                         !Number.isFinite(booking.pickupLng) ||
-                        !Number.isFinite(booking.dropoffLat) ||
-                        !Number.isFinite(booking.dropoffLng)
+                        (booking.issue !== "on_site" && !Number.isFinite(booking.dropoffLat)) ||
+                        (booking.issue !== "on_site" && !Number.isFinite(booking.dropoffLng))
                       ) {
                         setError("יש לבחור כתובת מהרשימה או לסמן את נקודות האיסוף והיעד במפה.");
                         return;
@@ -2362,14 +2461,18 @@ export default function App() {
         </>
       )}
       {screen === "tracking" && (
-        <TrackingScreen
+        <><TrackingScreen
           trip={trip}
           booking={booking}
           estimate={estimate}
           tracking={tracking}
           onCancel={cancelTrip}
           cancelling={cancelling}
-        />
+        /><DestinationChangePanel trip={trip} onChanged={(updated, destination) => {
+          setTrip(updated);
+          setBooking((current) => ({ ...current, dropoffAddress: destination.dropoffAddress,
+            dropoffLat: destination.dropoffLat, dropoffLng: destination.dropoffLng }));
+        }} /></>
       )}
       <Footer
         onNavigateSection={handleNavigateSection}

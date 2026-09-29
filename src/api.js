@@ -95,7 +95,19 @@ export const api = {
   getDriverLocation(tripId) {
     return request(`/trips/${tripId}/driver-location`)
   },
-  cancelTrip(tripId, reason = 'ביטול על ידי הלקוח מהאתר') {
-    return request(`/trips/${tripId}/cancel`, { method: 'POST', body: JSON.stringify({ reason }) })
+  getTrip(tripId) {
+    return request(`/trips/${tripId}`)
+  },
+  getCancellationQuote(tripId) {
+    return request(`/trips/${tripId}/cancellation-quote`)
+  },
+  quoteDestination(tripId, destination) {
+    return request(`/trips/${tripId}/destination-quote`, { method: 'POST', body: JSON.stringify(destination) })
+  },
+  changeDestination(tripId, destination) {
+    return request(`/trips/${tripId}/destination`, { method: 'PATCH', body: JSON.stringify(destination) })
+  },
+  cancelTrip(tripId, reason = 'ביטול על ידי הלקוח מהאתר', expectedFee) {
+    return request(`/trips/${tripId}/cancel`, { method: 'POST', body: JSON.stringify({ reason, expectedFee }) })
   },
 }
