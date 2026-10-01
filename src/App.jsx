@@ -55,11 +55,13 @@ import MapModal from "./components/MapModal/MapModal";
 import { getGoogleDrivingRoute } from "./services/googleMapsService";
 import "./App.css";
 
+const TERMS_URL = import.meta.env.VITE_TERMS_URL?.trim() || "";
+
 const STEPS = [
   { id: 1, label: "מיקום ופרטים" },
   { id: 2, label: "פרטי רכב" },
   { id: 3, label: "בחר גרריסט" },
-  { id: 4, label: "תשלום" },
+  { id: 4, label: "אישור הזמנה" },
 ];
 const ISSUES = [
   { id: "on_site", label: "קריאת שירות במקום", hint: "סיוע במקום ללא גרירה ליעד", icon: MapPin },
@@ -305,7 +307,7 @@ function Footer({ onNavigateSection, onNavigateHome }) {
           <a href="#reviews" onClick={(event) => handleNavClick(event, "reviews")}>
             בלוג
           </a>
-          <a href="#terms">תנאי שימוש</a>
+          {TERMS_URL && <a href={TERMS_URL} target="_blank" rel="noopener noreferrer">תנאי שימוש</a>}
         </div>
         <div>
           <h3>יצירת קשר</h3>
@@ -320,10 +322,6 @@ function Footer({ onNavigateSection, onNavigateHome }) {
           </span>
         </div>
       </div>
-      <div className="shell" id="terms" style={{ padding: '18px 0' }}>
-        <strong>תנאי שימוש</strong>
-        <p>בלחיצה על אישור ההזמנה הלקוח מסכים לתנאי השימוש. דמי ביטול: ללא חיוב בדקה הראשונה לאחר קבלת הקריאה בידי הנהג, 50 ₪ עד חמש דקות, 150 ₪ מחמש דקות ואילך. לאחר תחילת הנסיעה יחול המחיר המלא. הנוסח המלא יעודכן לאחר אישור משפטי.</p>
-      </div>
       <div className="shell" id="privacy" style={{ padding: '0 0 18px' }}>
         <strong>מדיניות פרטיות</strong>
         <p>TOW ME משתמשת בפרטי קשר ובמיקום לצורך טיפול בבקשת השירות.</p>
@@ -332,7 +330,7 @@ function Footer({ onNavigateSection, onNavigateHome }) {
         <span>כל הזכויות שמורות © {new Date().getFullYear()} TOW ME.</span>
         <div>
           <a href="#privacy">מדיניות פרטיות</a>
-          <a href="#terms">תנאי שימוש</a>
+          {TERMS_URL && <a href={TERMS_URL} target="_blank" rel="noopener noreferrer">תנאי שימוש</a>}
           <a href="#contact" onClick={(event) => handleNavClick(event, "contact")}>
             יצירת קשר
           </a>
@@ -891,7 +889,15 @@ function LocationStep({
           <AlertTriangle /> {error}
         </div>
       )}
-      <button className="primary-button" type="submit">
+      <label className="app-check-row">
+        <input type="checkbox" checked={booking.termsAccepted} disabled={!TERMS_URL}
+          onChange={(event) => setBooking({ ...booking, termsAccepted: event.target.checked })} required />
+        <span>קראתי ואני מסכים/ה ל{TERMS_URL
+          ? <a href={TERMS_URL} target="_blank" rel="noopener noreferrer">תנאי השימוש</a>
+          : 'תנאי השימוש (טרם פורסמו)'}</span>
+      </label>
+      {!TERMS_URL && <p className="app-cancellation-warning">לא ניתן להמשיך בהזמנה עד לפרסום תנאי השימוש המאושרים.</p>}
+      <button className="primary-button" type="submit" disabled={!TERMS_URL || !booking.termsAccepted}>
         המשך <ArrowLeft />
       </button>
     </form>
@@ -1256,36 +1262,11 @@ function PaymentStep({
     if (booking.paymentMethod === "wallet") return 0;
     return 2;
   });
-  const [saveCard, setSaveCard] = useState(true);
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardCvv, setCardCvv] = useState("");
-  const [cardExpiry, setCardExpiry] = useState("");
-  const [cardHolder, setCardHolder] = useState("");
 
   const handleSelectMethod = (idx) => {
     setMethod(idx);
     const methodStr = idx === 2 ? "card" : "wallet";
     setBooking({ ...booking, paymentMethod: methodStr });
-  };
-
-  const handleCardNumberChange = (e) => {
-    const raw = e.target.value.replace(/\D/g, "").slice(0, 16);
-    const formatted = raw.replace(/(.{4})/g, "$1 ").trim();
-    setCardNumber(formatted);
-  };
-
-  const handleExpiryChange = (e) => {
-    const raw = e.target.value.replace(/\D/g, "").slice(0, 4);
-    if (raw.length >= 2) {
-      setCardExpiry(`${raw.slice(0, 2)}/${raw.slice(2)}`);
-    } else {
-      setCardExpiry(raw);
-    }
-  };
-
-  const handleCvvChange = (e) => {
-    const raw = e.target.value.replace(/\D/g, "").slice(0, 4);
-    setCardCvv(raw);
   };
 
   return (
@@ -1306,9 +1287,9 @@ function PaymentStep({
               <span>{booking.pickupAddress || "נקודת איסוף"}</span>
             </div>
             <ArrowLeft size={18} className="app-summary-arrow" />
-            <div className="app-summary-place" title={booking.dropoffAddress}>
+            <div className="app-summary-place" title={booking.issue === "on_site" ? "שירות במקום" : booking.dropoffAddress}>
               <MapPin size={17} className="app-summary-pin" />
-              <span>{booking.dropoffAddress || "נקודת יעד"}</span>
+              <span>{booking.issue === "on_site" ? "שירות במקום" : booking.dropoffAddress || "נקודת יעד"}</span>
             </div>
           </div>
 
@@ -1377,15 +1358,15 @@ function PaymentStep({
             <CreditCard />
           </span>
           <div>
-            <h1>תשלום</h1>
-            <p>השלמת פרטי התשלום להזמנה</p>
+            <h1>אישור הזמנה</h1>
+            <p>בדיקת פרטי ההזמנה ואמצעי תשלום מועדף</p>
           </div>
         </header>
 
         {/* Section: Payment Method */}
         <div className="payment-section">
           <h3>
-            <CreditCard /> שיטת תשלום
+            <CreditCard /> אמצעי תשלום מועדף
           </h3>
           <div className="app-methods-grid">
             {/* 0: Apple Pay */}
@@ -1460,71 +1441,12 @@ function PaymentStep({
           </div>
         </div>
 
-        {/* Section: Card Details (Active when method === 2) */}
-        {method === 2 && (
-          <div className="payment-section">
-            <h3>
-              <CreditCard /> פרטי כרטיס
-            </h3>
-            <div className="app-field-group">
-              <div className="app-input-field is-active">
-                <CreditCard size={19} className="app-input-icon-svg text-muted" />
-                <input
-                  dir="ltr"
-                  value={cardNumber}
-                  onChange={handleCardNumberChange}
-                  placeholder="XXXX XXXX XXXX XXXX"
-                  maxLength={19}
-                  required={method === 2}
-                />
-              </div>
-
-              <div className="app-input-row">
-                <div className="app-input-field">
-                  <img src={payLockIcon} alt="" className="app-input-icon-img" />
-                  <input
-                    dir="ltr"
-                    value={cardCvv}
-                    onChange={handleCvvChange}
-                    placeholder="CVV"
-                    maxLength={4}
-                    required={method === 2}
-                  />
-                </div>
-                <div className="app-input-field">
-                  <Clock3 size={18} className="app-input-icon-svg text-muted" />
-                  <input
-                    dir="ltr"
-                    value={cardExpiry}
-                    onChange={handleExpiryChange}
-                    placeholder="MM/YY"
-                    maxLength={5}
-                    required={method === 2}
-                  />
-                </div>
-              </div>
-
-              <div className="app-input-field">
-                <img src={payPersonIcon} alt="" className="app-input-icon-img" />
-                <input
-                  value={cardHolder}
-                  onChange={(e) => setCardHolder(e.target.value)}
-                  placeholder="שם בעל הכרטיס"
-                  required={method === 2}
-                />
-              </div>
-            </div>
-
-            <label className="app-save-card-row">
-              <input
-                type="checkbox"
-                checked={saveCard}
-                onChange={(e) => setSaveCard(e.target.checked)}
-              />
-              <span>שמור כרטיס לתשלומים עתידיים</span>
-            </label>
-          </div>
-        )}
+        <p className="app-payment-pending" role="note">
+          פרטי הכרטיס אינם נאספים כעת. בחירת אמצעי התשלום היא העדפה בלבד; התשלום יוסדר בנפרד לאחר חיבור ספק התשלומים.
+        </p>
+        <p className="app-cancellation-warning" role="note">
+          <AlertTriangle size={18} /> ביטול עד דקה מאישור הנהג: ללא עלות; מדקה עד 5 דקות: ₪50; לאחר 5 דקות: ₪150; לאחר הגעת הנהג: מחיר הנסיעה המלא. הסכום המדויק יוצג לאישור לפני הביטול.
+        </p>
 
         {/* SMS updates checkbox */}
         <label className="app-check-row">
@@ -1537,14 +1459,6 @@ function PaymentStep({
           />
           <span>שלח לי עדכונים ב-SMS על מיקום הגרריסט</span>
         </label>
-        <label className="app-check-row">
-          <input type="checkbox" checked={booking.termsAccepted}
-            onChange={(e) => setBooking({ ...booking, termsAccepted: e.target.checked })} required />
-          <span>קראתי ואני מסכים/ה ל
-            <button type="button" onClick={() => window.alert('תנאי השימוש: בעת הזמנת שירות גרירה חלים תנאי הביטול המוצגים לפני אישור ההזמנה. הנוסח המלא יעודכן לאחר אישור משפטי.')}>תנאי השימוש</button>
-          </span>
-        </label>
-
         {error && (
           <div className="form-error">
             <AlertTriangle /> {error}
@@ -1559,12 +1473,12 @@ function PaymentStep({
           <button
             className="primary-button primary-button--pay"
             type="submit"
-            disabled={submitting}
+            disabled={submitting || !TERMS_URL}
           >
             <Check />{" "}
             {submitting
               ? "מבצע הזמנה..."
-              : `לתשלום ₪${estimate.total || 0}`}{" "}
+              : `שליחת הזמנה · מחיר משוער ₪${estimate.total || 0}`}{" "}
             <ArrowLeft />
           </button>
         </div>
@@ -1572,7 +1486,7 @@ function PaymentStep({
         {/* Security SSL footer */}
         <div className="app-secure-footer">
           <img src={payLockIcon} alt="" />
-          <span>תשלום מאובטח SSL</span>
+          <span>לא יבוצע חיוב בעת שליחת ההזמנה</span>
         </div>
       </form>
     </div>
@@ -2263,6 +2177,10 @@ export default function App() {
     }
   };
   const createBooking = async (contactOverride = {}) => {
+    if (!TERMS_URL) {
+      setError("יש לפרסם את תנאי השימוש המאושרים לפני שליחת הזמנה.");
+      return;
+    }
     const contactName = (contactOverride.name || booking.contactName || "").trim();
     const contactPhone = (contactOverride.phoneNumber || booking.contactPhone || "").replace(/[\s()-]/g, "");
     if (!contactName || !/^\+?\d{9,15}$/.test(contactPhone) || !booking.termsAccepted) {
