@@ -47,7 +47,7 @@ export default function Footer() {
               <li><a href="#about">אודות TOW ME</a></li>
               <li><a href="#how-it-works">איך זה עובד</a></li>
               <li><a href="#reviews">המלצות לקוחות</a></li>
-              <li><a href="#terms">תנאי שימוש ופרטיות</a></li>
+              <li><a href="/terms-of-use">תנאי שימוש ופרטיות</a></li>
             </ul>
           </div>
 
@@ -79,7 +79,7 @@ export default function Footer() {
           </div>
           <div className="legal-links flex gap-4">
             <a href="#privacy">מדיניות פרטיות</a>
-            <a href="#terms">תנאי שימוש</a>
+            <a href="/terms-of-use">תנאי שימוש</a>
           </div>
         </div>
 

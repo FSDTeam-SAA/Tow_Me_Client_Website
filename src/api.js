@@ -51,6 +51,7 @@ async function request(path, options = {}) {
 }
 
 export const api = {
+  getTerms: () => request('/terms'),
   baseUrl: API_BASE_URL,
   async login(phoneNumber, password) {
     const data = await request('/auth/customer/login', {

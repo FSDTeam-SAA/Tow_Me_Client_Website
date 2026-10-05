@@ -55,7 +55,7 @@ import MapModal from "./components/MapModal/MapModal";
 import { getGoogleDrivingRoute } from "./services/googleMapsService";
 import "./App.css";
 
-const TERMS_URL = import.meta.env.VITE_TERMS_URL?.trim() || "";
+const TERMS_URL = "/terms-of-use";
 
 const STEPS = [
   { id: 1, label: "מיקום ופרטים" },
@@ -127,6 +127,7 @@ const DEFAULT_BOOKING = {
   contactPhone: "",
   smsUpdates: true,
   termsAccepted: false,
+  termsVersion: "",
 };
 // Client-provided Hebrew list. The second value matches the registry brand
 // where available; unmatched makes still allow a manually entered model.
@@ -806,6 +807,14 @@ function LocationStep({
   onOpenMap,
   error,
 }) {
+  const [terms, setTerms] = useState(null);
+  const [termsError, setTermsError] = useState("");
+  const loadTerms = async () => {
+    setTermsError("");
+    try { setTerms(await api.getTerms()); }
+    catch { setTermsError("לא ניתן לטעון את תנאי השימוש. נסה שוב."); }
+  };
+  useEffect(() => { loadTerms(); }, []);
   return (
     <form className="booking-card" onSubmit={onNext}>
       <header className="booking-card-title">
@@ -890,14 +899,13 @@ function LocationStep({
         </div>
       )}
       <label className="app-check-row">
-        <input type="checkbox" checked={booking.termsAccepted} disabled={!TERMS_URL}
-          onChange={(event) => setBooking({ ...booking, termsAccepted: event.target.checked })} required />
-        <span>קראתי ואני מסכים/ה ל{TERMS_URL
-          ? <a href={TERMS_URL} target="_blank" rel="noopener noreferrer">תנאי השימוש</a>
-          : 'תנאי השימוש (טרם פורסמו)'}</span>
+        <input type="checkbox" checked={booking.termsAccepted && booking.termsVersion === terms?.version} disabled={!terms}
+          onChange={(event) => setBooking({ ...booking, termsAccepted: event.target.checked, termsVersion: terms.version })} required />
+        <span>קראתי ואני מאשר <a href={TERMS_URL} target="_blank" rel="noopener noreferrer">תנאי שימוש באתר</a></span>
       </label>
-      {!TERMS_URL && <p className="app-cancellation-warning">לא ניתן להמשיך בהזמנה עד לפרסום תנאי השימוש המאושרים.</p>}
-      <button className="primary-button" type="submit" disabled={!TERMS_URL || !booking.termsAccepted}>
+      {termsError && <p role="alert">{termsError} <button type="button" onClick={loadTerms}>נסה שוב</button></p>}
+      {!terms && !termsError && <p role="status">טוען תנאי שימוש...</p>}
+      <button className="primary-button" type="submit" disabled={!terms || !booking.termsAccepted || booking.termsVersion !== terms.version}>
         המשך <ArrowLeft />
       </button>
     </form>
@@ -2222,6 +2230,7 @@ export default function App() {
         smsUpdates: booking.smsUpdates,
         bookingSource: "website",
         termsAccepted: booking.termsAccepted,
+        termsVersion: booking.termsVersion,
         notes: [
           booking.issueDetails,
           booking.vehicleNotes,
@@ -2243,6 +2252,10 @@ export default function App() {
       });
     } catch (err) {
       setError(err.message);
+      if (err.status === 409) {
+        setBooking(current => ({ ...current, termsAccepted: false, termsVersion: '' }));
+        setScreen("location");
+      }
     } finally {
       setSubmitting(false);
     }

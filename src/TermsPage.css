@@ -1,0 +1,11 @@
+.terms-page { max-width: 900px; margin: 32px auto; padding: 24px; background: white; color: #18202b; border-radius: 16px; line-height: 1.8; overflow-wrap: anywhere; }
+.terms-page h1 { font-size: clamp(24px, 5vw, 34px); }
+.terms-page h2 { margin-top: 28px; font-size: 21px; }
+.terms-page ul, .terms-page ol { padding-inline-start: 28px; }
+.terms-page a { color: #b84010; text-decoration: underline; }
+.terms-page .ql-align-center { text-align: center; }
+.terms-page .ql-align-right { text-align: right; }
+.terms-page .ql-align-justify { text-align: justify; }
+.terms-page li[data-list="bullet"] { list-style-type: disc; }
+.terms-page .ql-indent-1 { margin-inline-start: 2em; }
+.terms-page .ql-indent-2 { margin-inline-start: 4em; }
