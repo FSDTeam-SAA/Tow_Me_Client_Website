@@ -205,6 +205,28 @@
 .ref-issue-list button.active { color: var(--ref-navy); background: #fff8f5; }
 .ref-issue-list button.active::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--ref-orange); }
 
+.ref-booking .ref-terms-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 16px 0 0;
+  font-weight: 500;
+  line-height: 1.6;
+  cursor: pointer;
+}
+
+.ref-terms-consent input {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  accent-color: var(--ref-orange);
+  cursor: pointer;
+}
+
+.ref-terms-consent a { color: var(--ref-navy); text-decoration: underline; }
+.ref-search-button:disabled { opacity: .55; cursor: not-allowed; }
+
 .ref-search-button {
   width: 100%;
   min-height: 58px;
@@ -221,7 +243,7 @@
 }
 
 .ref-search-button svg { width: 17px; }
-.ref-search-button:hover { transform: translateY(-1px); filter: saturate(1.08); }
+.ref-search-button:hover:not(:disabled) { transform: translateY(-1px); filter: saturate(1.08); }
 .ref-safe { display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 10px; color: #a2a9b5; font-size: .65rem; }
 .ref-safe svg { width: 12px; height: 12px; }
 
