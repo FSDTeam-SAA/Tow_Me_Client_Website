@@ -23,6 +23,8 @@ function BookingWidget({ onStart }) {
   const [dropoffAddress, setDropoffAddress] = useState('')
   const [issue, setIssue] = useState('breakdown')
   const [locating, setLocating] = useState(false)
+  const [pickupCoordinates, setPickupCoordinates] = useState(null)
+  const [termsAccepted, setTermsAccepted] = useState(false)
 
   const locate = () => {
     setLocating(true)
@@ -35,7 +37,7 @@ function BookingWidget({ onStart }) {
       ({ coords }) => {
         setPickupAddress('המיקום הנוכחי שלי')
         setLocating(false)
-        onStart({ pickupAddress: 'המיקום הנוכחי שלי', pickupLat: coords.latitude, pickupLng: coords.longitude, dropoffAddress, issue })
+        setPickupCoordinates({ pickupLat: coords.latitude, pickupLng: coords.longitude })
       },
       () => {
         setPickupAddress('המיקום הנוכחי שלי')
@@ -46,7 +48,11 @@ function BookingWidget({ onStart }) {
   }
 
   return (
-    <form className="ref-booking" onSubmit={(event) => { event.preventDefault(); onStart({ pickupAddress, dropoffAddress, issue }) }}>
+    <form className="ref-booking" onSubmit={(event) => {
+      event.preventDefault()
+      if (!termsAccepted) return
+      onStart({ pickupAddress, dropoffAddress, issue, ...pickupCoordinates })
+    }}>
       <div className="ref-booking-title">
         <span><MapPin /></span>
         <strong>הזמן גרר עכשיו!</strong>
@@ -55,7 +61,10 @@ function BookingWidget({ onStart }) {
       <label>מיקום נוכחי</label>
       <div className="ref-input">
         <LocateFixed />
-        <input value={pickupAddress} onChange={(event) => setPickupAddress(event.target.value)} placeholder="הזן מיקום אוטומטי" required />
+        <input value={pickupAddress} onChange={(event) => {
+          setPickupAddress(event.target.value)
+          setPickupCoordinates(null)
+        }} placeholder="הזן מיקום אוטומטי" required />
         <button type="button" onClick={locate}>{locating ? '...' : 'GPS'}</button>
       </div>
 
@@ -74,7 +83,11 @@ function BookingWidget({ onStart }) {
         ))}
       </div>
 
-      <button className="ref-search-button" type="submit"><Search /> חפש גרריסטים זמינים <ArrowLeft /></button>
+      <label className="ref-terms-consent">
+        <input type="checkbox" checked={termsAccepted} onChange={(event) => setTermsAccepted(event.target.checked)} required />
+        <span>קראתי ואני מאשר <a href="/terms-of-use" target="_blank" rel="noopener noreferrer">תנאי שימוש באתר</a></span>
+      </label>
+      <button className="ref-search-button" type="submit" disabled={!termsAccepted || locating}><Search /> חפש גרריסטים זמינים <ArrowLeft /></button>
       <span className="ref-safe"><LockKeyhole /> ללא התחייבות · מחיר שקוף · שירות 24/7</span>
     </form>
   )
